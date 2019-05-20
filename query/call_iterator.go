@@ -54,7 +54,7 @@ func NewCallIterator(input Iterator, opt IteratorOptions) (Iterator, error) {
 	case "mean":
 		return newMeanIterator(input, opt)
 	default:
-		return nil, fmt.Errorf("unsupported function call: %s", name)
+		return input, nil
 	}
 }
 

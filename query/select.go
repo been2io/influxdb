@@ -430,8 +430,8 @@ func (b *exprIteratorBuilder) buildCallIterator(ctx context.Context, expr *influ
 			builder.selector = true
 			builder.writeMode = false
 
-			ref := expr.Args[0].(*influxql.VarRef)
-			i, err := builder.buildVarRefIterator(ctx, ref)
+			//ref := expr.Args[0].(*influxql.VarRef)
+			i, err := b.callIterator(ctx, expr,opt)
 			if err != nil {
 				return nil, err
 			}
@@ -513,6 +513,7 @@ func (b *exprIteratorBuilder) buildCallIterator(ctx context.Context, expr *influ
 			return b.callIterator(ctx, expr, opt)
 		case "median":
 			opt.Ordered = true
+			opt.Expr = expr
 			input, err := buildExprIterator(ctx, expr.Args[0].(*influxql.VarRef), b.ic, b.sources, opt, false, false)
 			if err != nil {
 				return nil, err
@@ -539,7 +540,8 @@ func (b *exprIteratorBuilder) buildCallIterator(ctx context.Context, expr *influ
 			return newSpreadIterator(input, opt)
 		case "percentile":
 			opt.Ordered = true
-			input, err := buildExprIterator(ctx, expr.Args[0].(*influxql.VarRef), b.ic, b.sources, opt, false, false)
+			//input, err := buildExprIterator(ctx, expr.Args[0].(*influxql.VarRef), b.ic, b.sources, opt, false, false)
+			input, err := b.callIterator(ctx, expr,opt)
 			if err != nil {
 				return nil, err
 			}
