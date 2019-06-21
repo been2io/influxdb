@@ -759,7 +759,9 @@ func buildCursor(ctx context.Context, stmt *influxql.SelectStatement, ic Iterato
 	}
 	return newMultiScannerCursor(scanners, fields, opt), nil
 }
-
+func BuildAuxIterator(ctx context.Context, ic IteratorCreator, sources influxql.Sources, opt IteratorOptions) (Iterator, error) {
+	return buildAuxIterator(ctx,ic,sources,opt)
+}
 func buildAuxIterator(ctx context.Context, ic IteratorCreator, sources influxql.Sources, opt IteratorOptions) (Iterator, error) {
 	span := tracing.SpanFromContext(ctx)
 	if span != nil {

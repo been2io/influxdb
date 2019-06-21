@@ -3,6 +3,7 @@ package run
 import (
 	"crypto/tls"
 	"fmt"
+	"github.com/influxdata/influxdb/cluster"
 	"io"
 	"log"
 	"net"
@@ -34,7 +35,7 @@ import (
 	"github.com/influxdata/influxdb/storage/reads"
 	"github.com/influxdata/influxdb/tcp"
 	"github.com/influxdata/influxdb/tsdb"
-	client "github.com/influxdata/usage-client/v1"
+	"github.com/influxdata/usage-client/v1"
 	"go.uber.org/zap"
 
 	// Initialize the engine package
@@ -83,8 +84,8 @@ type Server struct {
 	// These references are required for the tcp muxer.
 	SnapshotterService *snapshotter.Service
 
-	Monitor *monitor.Monitor
-
+	Monitor        *monitor.Monitor
+	ClusterService *cluster.Service
 	// Server reporting and registration
 	reportingDisabled bool
 
@@ -203,16 +204,17 @@ func NewServer(c *Config, buildInfo *BuildInfo) (*Server, error) {
 	s.PointsWriter.WriteTimeout = time.Duration(c.Coordinator.WriteTimeout)
 	s.PointsWriter.TSDBStore = s.TSDBStore
 
+	shardMapper := &coordinator.LocalShardMapper{
+		MetaClient: s.MetaClient,
+		TSDBStore:  coordinator.LocalTSDBStore{Store: s.TSDBStore},
+	}
 	// Initialize query executor.
 	s.QueryExecutor = query.NewExecutor()
 	s.QueryExecutor.StatementExecutor = &coordinator.StatementExecutor{
-		MetaClient:  s.MetaClient,
-		TaskManager: s.QueryExecutor.TaskManager,
-		TSDBStore:   s.TSDBStore,
-		ShardMapper: &coordinator.LocalShardMapper{
-			MetaClient: s.MetaClient,
-			TSDBStore:  coordinator.LocalTSDBStore{Store: s.TSDBStore},
-		},
+		MetaClient:        s.MetaClient,
+		TaskManager:       s.QueryExecutor.TaskManager,
+		TSDBStore:         s.TSDBStore,
+		ShardMapper:       shardMapper,
 		Monitor:           s.Monitor,
 		PointsWriter:      s.PointsWriter,
 		MaxSelectPointN:   c.Coordinator.MaxSelectPointN,
@@ -222,6 +224,12 @@ func NewServer(c *Config, buildInfo *BuildInfo) (*Server, error) {
 	s.QueryExecutor.TaskManager.QueryTimeout = time.Duration(c.Coordinator.QueryTimeout)
 	s.QueryExecutor.TaskManager.LogQueriesAfter = time.Duration(c.Coordinator.LogQueriesAfter)
 	s.QueryExecutor.TaskManager.MaxConcurrentQueries = c.Coordinator.MaxConcurrentQueries
+
+	//cluster service
+	s.ClusterService = cluster.NewService(cluster.Config{})
+	s.ClusterService.ShardMapper = shardMapper
+	s.ClusterService.TSDBStore = s.TSDBStore
+	s.ClusterService.MetaClient = s.MetaClient
 
 	// Initialize the monitor
 	s.Monitor.Version = s.buildInfo.Version
@@ -345,7 +353,9 @@ func (s *Server) appendPrecreatorService(c precreator.Config) error {
 	s.Services = append(s.Services, srv)
 	return nil
 }
-
+func (s *Server) appendClusterService() {
+	s.Services = append(s.Services, s.ClusterService)
+}
 func (s *Server) appendUDPService(c udp.Config) {
 	if !c.Enabled {
 		return
@@ -377,6 +387,7 @@ func (s *Server) Open() error {
 
 	// Open shared TCP connection.
 	ln, err := net.Listen("tcp", s.BindAddress)
+	log.Printf("open tcp %v",s.BindAddress)
 	if err != nil {
 		return fmt.Errorf("listen: %s", err)
 	}
@@ -393,6 +404,7 @@ func (s *Server) Open() error {
 	s.appendContinuousQueryService(s.config.ContinuousQuery)
 	s.appendHTTPDService(s.config.HTTPD)
 	s.appendRetentionPolicyService(s.config.Retention)
+	s.appendClusterService()
 	for _, i := range s.config.GraphiteInputs {
 		if err := s.appendGraphiteService(i); err != nil {
 			return err
@@ -414,6 +426,8 @@ func (s *Server) Open() error {
 	s.PointsWriter.MetaClient = s.MetaClient
 	s.Monitor.MetaClient = s.MetaClient
 
+	s.ClusterService.Listener = mux.Listen(cluster.MuxHeader)
+
 	s.SnapshotterService.Listener = mux.Listen(snapshotter.MuxHeader)
 
 	// Configure logging for all services and clients.
@@ -431,7 +445,7 @@ func (s *Server) Open() error {
 	}
 	s.SnapshotterService.WithLogger(s.Logger)
 	s.Monitor.WithLogger(s.Logger)
-
+	s.ClusterService.WithLogger(s.Logger)
 	// Open TSDB store.
 	if err := s.TSDBStore.Open(); err != nil {
 		return fmt.Errorf("open tsdb store: %s", err)

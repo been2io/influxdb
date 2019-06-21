@@ -860,6 +860,7 @@ func (h *Handler) serveOptions(w http.ResponseWriter, r *http.Request) {
 // servePing returns a simple response to let the client know the server is running.
 func (h *Handler) servePing(w http.ResponseWriter, r *http.Request) {
 	verbose := r.URL.Query().Get("verbose")
+	w.Header().Set("X-Discovery-Tcp",":8088")
 	atomic.AddInt64(&h.stats.PingRequests, 1)
 
 	if verbose != "" && verbose != "0" && verbose != "false" {
