@@ -386,11 +386,12 @@ func (s *Server) Open() error {
 	startProfile(s.CPUProfile, s.MemProfile)
 
 	// Open shared TCP connection.
-	ln, err := net.Listen("tcp", s.BindAddress)
-	log.Printf("open tcp %v",s.BindAddress)
+	tcpAddr := os.Getenv("INFLUXDB_TCP_BIND_ADDRESS")
+	ln, err := net.Listen("tcp", tcpAddr)
 	if err != nil {
 		return fmt.Errorf("listen: %s", err)
 	}
+	log.Printf("open tcp %v", ln.Addr())
 	s.Listener = ln
 
 	// Multiplex listener.
@@ -402,6 +403,7 @@ func (s *Server) Open() error {
 	s.appendPrecreatorService(s.config.Precreator)
 	s.appendSnapshotterService()
 	s.appendContinuousQueryService(s.config.ContinuousQuery)
+	s.config.HTTPD.DiscoveryTCP = ln.Addr().String()
 	s.appendHTTPDService(s.config.HTTPD)
 	s.appendRetentionPolicyService(s.config.Retention)
 	s.appendClusterService()

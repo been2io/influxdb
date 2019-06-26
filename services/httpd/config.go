@@ -32,6 +32,7 @@ const (
 
 // Config represents a configuration for a HTTP service.
 type Config struct {
+	DiscoveryTCP            string
 	Enabled                 bool           `toml:"enabled"`
 	BindAddress             string         `toml:"bind-address"`
 	AuthEnabled             bool           `toml:"auth-enabled"`

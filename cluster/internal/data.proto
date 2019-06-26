@@ -29,6 +29,7 @@ message CreateIteratorRequest {
 
 message CreateIteratorResponse {
     string Err = 1;
+    int32 DataType = 2;
 }
 
 message FieldDimensionsRequest {
