@@ -235,7 +235,7 @@ func (s *Service) processFieldDimensionsRequest(conn net.Conn) {
 				if err != nil {
 					return err
 				}
-				for k,v := range f {
+				for k, v := range f {
 					fields[k] = v
 				}
 				for k := range d {
@@ -393,9 +393,23 @@ func (s *Service) processCreateIteratorRequest(conn net.Conn) {
 		EncodeTLV(conn, createIteratorResponseMessage, &CreateIteratorResponse{Err: err})
 		return
 	}
-
+	resp := &CreateIteratorResponse{}
+	var dataType influxql.DataType
+	switch itr.(type) {
+	case query.FloatIterator:
+		dataType = influxql.Float
+	case query.IntegerIterator:
+		dataType = influxql.Integer
+	case query.StringIterator:
+		dataType = influxql.String
+	case query.BooleanIterator:
+		dataType = influxql.Boolean
+	default:
+		resp.Err = fmt.Errorf("no data type %v",dataType)
+	}
+	resp.DataType =dataType
 	// Encode success response.
-	if err := EncodeTLV(conn, createIteratorResponseMessage, &CreateIteratorResponse{}); err != nil {
+	if err := EncodeTLV(conn, createIteratorResponseMessage, resp); err != nil {
 		s.Logger.Info("error writing CreateIterator response: %s", zap.Error(err))
 		return
 	}
@@ -404,6 +418,7 @@ func (s *Service) processCreateIteratorRequest(conn net.Conn) {
 	if itr == nil {
 		return
 	}
+
 	// Stream iterator to connection.
 	if err := query.NewIteratorEncoder(conn).EncodeIterator(itr); err != nil {
 		s.Logger.Info("error encoding CreateIterator iterator: %s", zap.Error(err))
