@@ -1171,11 +1171,17 @@ func decodeVarRef(pb *internal.VarRef) influxql.VarRef {
 	}
 }
 
+type NilIterator interface {
+	Nil()
+}
 type nilFloatIterator struct{}
 
 func (*nilFloatIterator) Stats() IteratorStats       { return IteratorStats{} }
 func (*nilFloatIterator) Close() error               { return nil }
 func (*nilFloatIterator) Next() (*FloatPoint, error) { return nil, nil }
+func (*nilFloatIterator) Nil() {
+
+}
 
 type nilFloatReaderIterator struct {
 	r io.Reader
@@ -1188,6 +1194,9 @@ func (itr *nilFloatReaderIterator) Close() error {
 		return r.Close()
 	}
 	return nil
+}
+func (itr *nilFloatReaderIterator) Nil() {
+
 }
 func (*nilFloatReaderIterator) Next() (*FloatPoint, error) { return nil, nil }
 

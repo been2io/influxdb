@@ -396,6 +396,8 @@ func (s *Service) processCreateIteratorRequest(conn net.Conn) {
 	resp := &CreateIteratorResponse{}
 	var dataType influxql.DataType
 	switch itr.(type) {
+	case query.NilIterator:
+		dataType = influxql.Unknown
 	case query.FloatIterator:
 		dataType = influxql.Float
 	case query.IntegerIterator:
@@ -405,9 +407,9 @@ func (s *Service) processCreateIteratorRequest(conn net.Conn) {
 	case query.BooleanIterator:
 		dataType = influxql.Boolean
 	default:
-		resp.Err = fmt.Errorf("no data type %v",dataType)
+		resp.Err = fmt.Errorf("no data type %v", dataType)
 	}
-	resp.DataType =dataType
+	resp.DataType = dataType
 	// Encode success response.
 	if err := EncodeTLV(conn, createIteratorResponseMessage, resp); err != nil {
 		s.Logger.Info("error writing CreateIterator response: %s", zap.Error(err))
