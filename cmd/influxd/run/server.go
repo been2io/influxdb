@@ -296,6 +296,7 @@ func (s *Server) appendHTTPDService(c httpd.Config) {
 	srv.Handler.Monitor = s.Monitor
 	srv.Handler.PointsWriter = s.PointsWriter
 	srv.Handler.Version = s.buildInfo.Version
+	srv.Handler.ClusterService = s.ClusterService
 	srv.Handler.BuildType = "OSS"
 	ss := storage.NewStore(s.TSDBStore, s.MetaClient)
 	srv.Handler.Store = ss

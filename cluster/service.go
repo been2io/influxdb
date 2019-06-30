@@ -209,7 +209,7 @@ func (s *Service) handleConn(conn net.Conn) {
 		}
 	}
 }
-func (s *Service) processFieldDimensionsRequest(conn net.Conn) {
+func (s *Service) processFieldDimensionsRequest(conn io.ReadWriteCloser) {
 	var fields map[string]influxql.DataType
 	var dimensions map[string]struct{}
 	if err := func() error {
@@ -248,7 +248,10 @@ func (s *Service) processFieldDimensionsRequest(conn net.Conn) {
 		return nil
 	}(); err != nil {
 		s.Logger.Error("error reading FieldDimensions request: %s", zap.Error(err))
-		EncodeTLV(conn, fieldDimensionsResponseMessage, &FieldDimensionsResponse{Err: err})
+		err := EncodeTLV(conn, fieldDimensionsResponseMessage, &FieldDimensionsResponse{Err: err})
+		if err!=nil{
+			panic(err)
+		}
 		return
 	}
 
@@ -361,7 +364,74 @@ func (s *Service) writeShardResponse(w io.Writer, e error) {
 func (s *Service) WithLogger(log *zap.Logger) {
 	s.Logger = log.With(zap.String("service", "shard-precreation"))
 }
-func (s *Service) processCreateIteratorRequest(conn net.Conn) {
+func (s *Service) FieldDimensions(conn io.ReadWriteCloser) {
+	s.processFieldDimensionsRequest(conn)
+}
+func (s *Service) CreateIterator(conn io.ReadWriteCloser) {
+	defer conn.Close()
+	var itr query.Iterator
+	if err := func() error {
+		// Parse request.
+		var req CreateIteratorRequest
+		if err := DecodeLV(conn, &req); err != nil {
+			return err
+		}
+		opt := req.Opt
+		shardGroup, err := s.ShardMapper.MapShards(opt.Sources, influxql.TimeRange{
+			Min: time.Unix(0, opt.StartTime),
+			Max: time.Unix(0, opt.EndTime),
+		}, query.SelectOptions{})
+		if err != nil {
+			return err
+		}
+		// Generate a single iterator from all shards.
+		i, err := query.BuildAuxIterator(context.TODO(), shardGroup, opt.Sources, opt)
+		if err != nil {
+			return err
+		}
+		itr = i
+		return nil
+	}(); err != nil {
+		s.Logger.Info("error reading CreateIterator request: %s", zap.Error(err))
+		EncodeTLV(conn, createIteratorResponseMessage, &CreateIteratorResponse{Err: err})
+		return
+	}
+	resp := &CreateIteratorResponse{}
+	var dataType influxql.DataType
+	switch itr.(type) {
+	case query.NilIterator:
+		dataType = influxql.Unknown
+	case query.FloatIterator:
+		dataType = influxql.Float
+	case query.IntegerIterator:
+		dataType = influxql.Integer
+	case query.StringIterator:
+		dataType = influxql.String
+	case query.BooleanIterator:
+		dataType = influxql.Boolean
+	default:
+		resp.Err = fmt.Errorf("no data type %v", dataType)
+	}
+	resp.DataType = dataType
+	// Encode success response.
+	if err := EncodeTLV(conn, createIteratorResponseMessage, resp); err != nil {
+		s.Logger.Info("error writing CreateIterator response: %s", zap.Error(err))
+		return
+	}
+
+	// Exit if no iterator was produced.
+	if itr == nil {
+		return
+	}
+	defer itr.Close()
+	// Stream iterator to connection.
+	if err := query.NewIteratorEncoder(conn).EncodeIterator(itr); err != nil {
+		s.Logger.Info("error encoding CreateIterator iterator: %s", zap.Error(err))
+		return
+	}
+
+}
+func (s *Service) processCreateIteratorRequest(conn io.ReadWriteCloser) {
 	defer conn.Close()
 	var itr query.Iterator
 	if err := func() error {
