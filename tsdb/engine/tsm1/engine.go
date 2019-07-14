@@ -125,6 +125,7 @@ const (
 	statTSMFullCompactionError    = "tsmFullCompactionErr"
 	statTSMFullCompactionDuration = "tsmFullCompactionDuration"
 	statTSMFullCompactionQueue    = "tsmFullCompactionQueue"
+	writeValues                   = "writeValues"
 )
 
 // Engine represents a storage engine with compressed blocks.
@@ -647,6 +648,7 @@ type EngineStatistics struct {
 	TSMFullCompactionErrors   int64 // Counter of full compactions that have failed due to error.
 	TSMFullCompactionDuration int64 // Counter of number of wall nanoseconds spent in full compactions.
 	TSMFullCompactionsQueue   int64 // Gauge of full compactions queue.
+	WriteValues               int64
 }
 
 // Statistics returns statistics for periodic monitoring.
@@ -690,6 +692,7 @@ func (e *Engine) Statistics(tags map[string]string) []models.Statistic {
 			statTSMFullCompactionError:    atomic.LoadInt64(&e.stats.TSMFullCompactionErrors),
 			statTSMFullCompactionDuration: atomic.LoadInt64(&e.stats.TSMFullCompactionDuration),
 			statTSMFullCompactionQueue:    atomic.LoadInt64(&e.stats.TSMFullCompactionsQueue),
+			writeValues:                   atomic.LoadInt64(&e.stats.WriteValues),
 		},
 	})
 
@@ -1354,6 +1357,7 @@ func (e *Engine) WritePoints(points []models.Point) error {
 			return err
 		}
 	}
+	atomic.AddInt64(&e.stats.WriteValues, int64(len(values)))
 	return seriesErr
 }
 

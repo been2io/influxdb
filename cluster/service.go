@@ -249,7 +249,7 @@ func (s *Service) processFieldDimensionsRequest(conn io.ReadWriteCloser) {
 	}(); err != nil {
 		s.Logger.Error("error reading FieldDimensions request: %s", zap.Error(err))
 		err := EncodeTLV(conn, fieldDimensionsResponseMessage, &FieldDimensionsResponse{Err: err})
-		if err!=nil{
+		if err != nil {
 			panic(err)
 		}
 		return
