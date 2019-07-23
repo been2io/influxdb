@@ -885,10 +885,14 @@ func (rw rWCloser) Close() error {
 }
 
 func (h *Handler) serveCreateIterator(w http.ResponseWriter, r *http.Request) {
+	atomic.AddInt64(&h.stats.QueryRequests, 1)
+	defer func(start time.Time) {
+		atomic.AddInt64(&h.stats.QueryRequestDuration, time.Since(start).Nanoseconds())
+	}(time.Now())
 	w.WriteHeader(200)
 	rw := rWCloser{
 		w: w,
-		r:r.Body,
+		r: r.Body,
 	}
 
 	h.ClusterService.CreateIterator(rw)
