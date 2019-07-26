@@ -22,6 +22,14 @@
   revision = "a368813c5e648fee92e5f6c30e3944ff9d5e8895"
 
 [[projects]]
+  digest = "1:e92f5581902c345eb4ceffdcd4a854fb8f73cf436d47d837d1ec98ef1fe0a214"
+  name = "github.com/StackExchange/wmi"
+  packages = ["."]
+  pruneopts = "UT"
+  revision = "5d049714c4a64225c3c79a7cf7d02f7fb5b96338"
+  version = "1.0.0"
+
+[[projects]]
   digest = "1:c06d9e11d955af78ac3bbb26bd02e01d2f61f689e1a3bce2ef6fb683ef8a7f2d"
   name = "github.com/alecthomas/kingpin"
   packages = ["."]
@@ -177,6 +185,17 @@
   packages = ["."]
   pruneopts = "UT"
   revision = "9f0cb55181dd3a0a4c168d3dbc72d4aca4853126"
+
+[[projects]]
+  digest = "1:440028f55cb322d8cb5b9d5ebec298a00b7d74690a658fe6b1c0c0b44341bfae"
+  name = "github.com/go-ole/go-ole"
+  packages = [
+    ".",
+    "oleutil",
+  ]
+  pruneopts = "UT"
+  revision = "97b6244175ae18ea6eef668034fd6565847501c9"
+  version = "v1.2.4"
 
 [[projects]]
   digest = "1:ec6f9bf5e274c833c911923c9193867f3f18788c461f76f05f62bb1510e0ae65"
@@ -687,6 +706,30 @@
   version = "v0.2.2"
 
 [[projects]]
+  digest = "1:017945df688168959c8b1d032f69400fb723e68be7010701715adca3fc99f207"
+  name = "github.com/shirou/gopsutil"
+  packages = [
+    "cpu",
+    "disk",
+    "internal/common",
+    "mem",
+    "net",
+    "process",
+  ]
+  pruneopts = "UT"
+  revision = "4c8b404ee5c53b04b04f34b1744a26bf5d2910de"
+  source = "github.com/been2io/gopsutil"
+  version = "v2.19.6"
+
+[[projects]]
+  branch = "master"
+  digest = "1:99c6a6dab47067c9b898e8c8b13d130c6ab4ffbcc4b7cc6236c2cd0b1e344f5b"
+  name = "github.com/shirou/w32"
+  packages = ["."]
+  pruneopts = "UT"
+  revision = "bb4de0191aa41b5507caa14b0650cdbddcd9280b"
+
+[[projects]]
   digest = "1:08d65904057412fc0270fc4812a1c90c594186819243160dc779a402d4b6d0bc"
   name = "github.com/spf13/cast"
   packages = ["."]
@@ -1009,6 +1052,8 @@
     "github.com/prometheus/client_golang/prometheus",
     "github.com/prometheus/client_golang/prometheus/promhttp",
     "github.com/retailnext/hllpp",
+    "github.com/shirou/gopsutil/disk",
+    "github.com/shirou/gopsutil/process",
     "github.com/spf13/cast",
     "github.com/tinylib/msgp/msgp",
     "github.com/xlab/treeprint",

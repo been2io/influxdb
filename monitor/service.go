@@ -40,8 +40,8 @@ type Monitor struct {
 	Branch    string
 	BuildTime string
 
-	wg sync.WaitGroup
-
+	wg                sync.WaitGroup
+	DataDir           string
 	mu                sync.RWMutex
 	globalTags        map[string]string
 	diagRegistrations map[string]diagnostics.Client
@@ -341,6 +341,12 @@ func (m *Monitor) Statistics(tags map[string]string) ([]*Statistic, error) {
 		"NumGoroutine": int64(runtime.NumGoroutine()),
 	}
 	statistics = append(statistics, statistic)
+	sysStats := SystemStats(m.DataDir)
+	for _, stat := range sysStats {
+		statistics = append(statistics, &Statistic{
+			Statistic: *stat,
+		})
+	}
 
 	statistics = m.gatherStatistics(statistics, tags)
 	return statistics, nil

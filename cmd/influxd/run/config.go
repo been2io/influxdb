@@ -246,6 +246,7 @@ func (c *Config) diagnosticsClients() map[string]diagnostics.Client {
 
 // registerDiagnostics registers the config settings with the Monitor.
 func (c *Config) registerDiagnostics(m *monitor.Monitor) {
+	m.DataDir = c.Data.Dir
 	for name, dc := range c.diagnosticsClients() {
 		m.RegisterDiagnosticsClient(name, dc)
 	}

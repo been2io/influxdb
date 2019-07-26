@@ -25,6 +25,7 @@ type Config struct {
 	StoreEnabled  bool          `toml:"store-enabled"`
 	StoreDatabase string        `toml:"store-database"`
 	StoreInterval toml.Duration `toml:"store-interval"`
+	DataDir       string
 }
 
 // NewConfig returns an instance of Config with defaults.
