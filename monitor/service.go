@@ -341,7 +341,7 @@ func (m *Monitor) Statistics(tags map[string]string) ([]*Statistic, error) {
 		"NumGoroutine": int64(runtime.NumGoroutine()),
 	}
 	statistics = append(statistics, statistic)
-	sysStats := SystemStats(m.DataDir)
+	sysStats := SystemStats(m.DataDir,nil)
 	for _, stat := range sysStats {
 		statistics = append(statistics, &Statistic{
 			Statistic: *stat,

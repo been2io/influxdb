@@ -10,10 +10,19 @@ import (
 	"path/filepath"
 )
 
-func SystemStats(datadir string) ([]*models.Statistic) {
-	var stats []*models.Statistic
+
+var p *process.Process
+
+func init() {
 	pid := os.Getpid()
-	if p, err := process.NewProcess(int32(pid)); err == nil {
+	if p1, err := process.NewProcess(int32(pid)); err == nil {
+		p = p1
+	}
+
+}
+func SystemStats(datadir string, tags map[string]string) ([]*models.Statistic) {
+	var stats []*models.Statistic
+	if p != nil {
 		if cpu, err := p.Percent(0); err == nil {
 			stat := models.NewStatistic("cpu")
 			stat.Values["usedPercent"] = cpu
@@ -30,6 +39,7 @@ func SystemStats(datadir string) ([]*models.Statistic) {
 			}
 		}
 	}
+
 	for _, path := range []string{datadir, "/"} {
 		if usage, err := disk.Usage(path); err == nil {
 			stat := models.Statistic{
@@ -68,7 +78,12 @@ func SystemStats(datadir string) ([]*models.Statistic) {
 			}
 		}
 	}
+	for _, stat := range stats {
+		for k,v:=range tags{
+			stat.Tags[k]=v
+		}
 
+	}
 	return stats
 }
 func DirSize(path string) (int64, error) {
