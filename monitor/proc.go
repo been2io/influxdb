@@ -14,7 +14,7 @@ func SystemStats(datadir string) ([]*models.Statistic) {
 	var stats []*models.Statistic
 	pid := os.Getpid()
 	if p, err := process.NewProcess(int32(pid)); err == nil {
-		if cpu, err := p.CPUPercent(); err == nil {
+		if cpu, err := p.Percent(0); err == nil {
 			stat := models.NewStatistic("cpu")
 			stat.Values["usedPercent"] = cpu
 			stats = append(stats, &stat)
