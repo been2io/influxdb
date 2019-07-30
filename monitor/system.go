@@ -23,6 +23,7 @@ func (s *system) Diagnostics() (*diagnostics.Diagnostics, error) {
 		"currentTime": currentTime,
 		"started":     startTime,
 		"uptime":      currentTime.Sub(startTime).String(),
+		"up":          currentTime.Sub(startTime),
 	}
 
 	return diagnostics.RowFromMap(d), nil
