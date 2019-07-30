@@ -8,6 +8,7 @@ import (
 	"io/ioutil"
 	"os"
 	"path/filepath"
+	"runtime"
 )
 
 
@@ -26,6 +27,8 @@ func SystemStats(datadir string, tags map[string]string) ([]*models.Statistic) {
 		if cpu, err := p.Percent(0); err == nil {
 			stat := models.NewStatistic("cpu")
 			stat.Values["usedPercent"] = cpu
+			stat.Values["percent"] = cpu / float64(runtime.NumCPU())
+			stat.Values["num"] = runtime.NumCPU()
 			stats = append(stats, &stat)
 
 		}
