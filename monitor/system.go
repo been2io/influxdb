@@ -3,7 +3,6 @@ package monitor
 import (
 	"os"
 	"time"
-
 	"github.com/influxdata/influxdb/monitor/diagnostics"
 )
 
@@ -23,7 +22,7 @@ func (s *system) Diagnostics() (*diagnostics.Diagnostics, error) {
 		"currentTime": currentTime,
 		"started":     startTime,
 		"uptime":      currentTime.Sub(startTime).String(),
-		"up":          currentTime.Sub(startTime),
+		"up":          int64(currentTime.Sub(startTime)),
 	}
 
 	return diagnostics.RowFromMap(d), nil

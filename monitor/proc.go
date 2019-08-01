@@ -1,6 +1,7 @@
 package monitor
 
 import (
+	"expvar"
 	"fmt"
 	"github.com/influxdata/influxdb/models"
 	"github.com/shirou/gopsutil/disk"
@@ -9,8 +10,8 @@ import (
 	"os"
 	"path/filepath"
 	"runtime"
+	"strings"
 )
-
 
 var p *process.Process
 
@@ -21,6 +22,7 @@ func init() {
 	}
 
 }
+
 func SystemStats(datadir string, tags map[string]string) ([]*models.Statistic) {
 	var stats []*models.Statistic
 	if p != nil {
@@ -32,14 +34,42 @@ func SystemStats(datadir string, tags map[string]string) ([]*models.Statistic) {
 			stats = append(stats, &stat)
 
 		}
-		if fds, err := p.OpenFiles(); err == nil {
-			for _, fd := range fds {
-				stat := models.NewStatistic("fd")
-				stat.Tags["path"] = fd.Path
-				stat.Values["size"] = fd.Fd
+		if io, err := p.IOCounters(); err == nil {
+			stat := models.NewStatistic("io")
+			stat.Values["readBytes"] = io.ReadBytes
+			stat.Values["writeBytes"] = io.WriteBytes
+			stat.Values["reads"] = io.ReadCount
+			stat.Values["writes"] = io.WriteCount
+			stats = append(stats, &stat)
+		}
+		if ios, err := p.NetIOCounters(true); err == nil {
+			for _, io := range ios {
+				stat := models.NewStatistic("net")
+				stat.Tags["name"] = io.Name
+				stat.Values["bytesRecv"] = io.BytesRecv
+				stat.Values["bytesSend"] = io.BytesSent
+				stat.Values["err"] = io.Errin + io.Errout
 				stats = append(stats, &stat)
-
 			}
+		}
+		if conns, err := p.Connections(); err == nil {
+			m := expvar.Map{}
+			for _, conn := range conns {
+				m.Add(fmt.Sprintf("%v!%v", conn.Status, conn.Raddr.IP), 1)
+			}
+			m.Do(func(value expvar.KeyValue) {
+				if v, ok := value.Value.(*expvar.Int); ok {
+					keys := strings.Split(value.Key, "!")
+					if len(keys) == 2 {
+						stat := models.NewStatistic("conns")
+						stat.Tags["to"] = keys[1]
+						stat.Tags["status"] = keys[0]
+						stat.Values["number"] = v.Value()
+						stats = append(stats, &stat)
+					}
+
+				}
+			})
 		}
 	}
 
@@ -82,8 +112,8 @@ func SystemStats(datadir string, tags map[string]string) ([]*models.Statistic) {
 		}
 	}
 	for _, stat := range stats {
-		for k,v:=range tags{
-			stat.Tags[k]=v
+		for k, v := range tags {
+			stat.Tags[k] = v
 		}
 
 	}
