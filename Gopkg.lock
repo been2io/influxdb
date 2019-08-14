@@ -807,20 +807,21 @@
 
 [[projects]]
   branch = "master"
-  digest = "1:3678c5905f4223908ae7f0e09d7be17393a38ace3daaa5ece320e55b9b42314a"
+  digest = "1:7dfbae1bfddb30d28c80ff9d0b1fc65a55ec89fa390a50f59bbeba01daf0c3c8"
   name = "golang.org/x/net"
   packages = [
     "context",
     "context/ctxhttp",
     "http/httpguts",
     "http2",
+    "http2/h2c",
     "http2/hpack",
     "idna",
     "internal/timeseries",
     "trace",
   ]
   pruneopts = "UT"
-  revision = "a680a1efc54dd51c040b3b5ce4939ea3cf2ea0d1"
+  revision = "ca1201d0de80cfde86cb01aea620983605dfe99b"
 
 [[projects]]
   branch = "master"
@@ -1062,6 +1063,8 @@
     "go.uber.org/zap/zaptest/observer",
     "golang.org/x/crypto/bcrypt",
     "golang.org/x/crypto/ssh/terminal",
+    "golang.org/x/net/http2",
+    "golang.org/x/net/http2/h2c",
     "golang.org/x/sync/errgroup",
     "golang.org/x/sys/unix",
     "golang.org/x/text/encoding/unicode",

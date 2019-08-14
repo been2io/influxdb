@@ -4,6 +4,10 @@ package httpd // import "github.com/influxdata/influxdb/services/httpd"
 import (
 	"crypto/tls"
 	"fmt"
+	"github.com/influxdata/influxdb/models"
+	"go.uber.org/zap"
+	"golang.org/x/net/http2"
+	"golang.org/x/net/http2/h2c"
 	"net"
 	"net/http"
 	"os"
@@ -12,9 +16,6 @@ import (
 	"strings"
 	"syscall"
 	"time"
-
-	"github.com/influxdata/influxdb/models"
-	"go.uber.org/zap"
 )
 
 // statistics gathered by the httpd package.
@@ -246,7 +247,10 @@ func (s *Service) serveUnixSocket() {
 func (s *Service) serve(listener net.Listener) {
 	// The listener was closed so exit
 	// See https://github.com/golang/go/issues/4373
-	err := http.Serve(listener, s.Handler)
+	server := http.Server{
+		Handler: h2c.NewHandler(s.Handler, &http2.Server{}),
+	}
+	err := server.Serve(listener)
 
 	if err != nil && !strings.Contains(err.Error(), "closed") {
 		s.err <- fmt.Errorf("listener failed: addr=%s, err=%s", s.Addr(), err)
