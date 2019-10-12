@@ -181,7 +181,7 @@ func (b *exprIteratorBuilder) buildVarRefIterator(ctx context.Context, expr *inf
 					ic:   b.ic,
 					stmt: source.Statement,
 				}
-
+				ctx := context.WithValue(ctx, subQuery, struct{}{})
 				input, err := subquery.buildVarRefIterator(ctx, expr, b.opt)
 				if err != nil {
 					return err
@@ -208,6 +208,10 @@ func (b *exprIteratorBuilder) buildVarRefIterator(ctx context.Context, expr *inf
 	}
 	return itr, nil
 }
+
+var ProxyMode bool
+
+const subQuery = "subQuery"
 
 func (b *exprIteratorBuilder) buildCallIterator(ctx context.Context, expr *influxql.Call) (Iterator, error) {
 	// TODO(jsternberg): Refactor this. This section needs to die in a fire.
@@ -254,6 +258,9 @@ func (b *exprIteratorBuilder) buildCallIterator(ctx context.Context, expr *influ
 
 		return newHoltWintersIterator(input, opt, int(h.Val), int(m.Val), includeFitData, interval)
 	case "derivative", "non_negative_derivative", "difference", "non_negative_difference", "moving_average", "exponential_moving_average", "double_exponential_moving_average", "triple_exponential_moving_average", "relative_strength_index", "triple_exponential_derivative", "kaufmans_efficiency_ratio", "kaufmans_adaptive_moving_average", "chande_momentum_oscillator", "elapsed":
+		if ctx.Value(subQuery) != nil && ProxyMode {
+			return b.callIterator(ctx, expr, opt)
+		}
 		if !opt.Interval.IsZero() {
 			if opt.Ascending {
 				opt.StartTime -= int64(opt.Interval.Duration)
@@ -262,7 +269,6 @@ func (b *exprIteratorBuilder) buildCallIterator(ctx context.Context, expr *influ
 			}
 		}
 		opt.Ordered = true
-
 		input, err := buildExprIterator(ctx, expr.Args[0], b.ic, b.sources, opt, b.selector, false)
 		if err != nil {
 			return nil, err
@@ -431,7 +437,7 @@ func (b *exprIteratorBuilder) buildCallIterator(ctx context.Context, expr *influ
 			builder.writeMode = false
 
 			//ref := expr.Args[0].(*influxql.VarRef)
-			i, err := b.callIterator(ctx, expr,opt)
+			i, err := b.callIterator(ctx, expr, opt)
 			if err != nil {
 				return nil, err
 			}
@@ -541,7 +547,7 @@ func (b *exprIteratorBuilder) buildCallIterator(ctx context.Context, expr *influ
 		case "percentile":
 			opt.Ordered = true
 			//input, err := buildExprIterator(ctx, expr.Args[0].(*influxql.VarRef), b.ic, b.sources, opt, false, false)
-			input, err := b.callIterator(ctx, expr,opt)
+			input, err := b.callIterator(ctx, expr, opt)
 			if err != nil {
 				return nil, err
 			}
@@ -760,7 +766,7 @@ func buildCursor(ctx context.Context, stmt *influxql.SelectStatement, ic Iterato
 	return newMultiScannerCursor(scanners, fields, opt), nil
 }
 func BuildAuxIterator(ctx context.Context, ic IteratorCreator, sources influxql.Sources, opt IteratorOptions) (Iterator, error) {
-	return buildAuxIterator(ctx,ic,sources,opt)
+	return buildAuxIterator(ctx, ic, sources, opt)
 }
 func buildAuxIterator(ctx context.Context, ic IteratorCreator, sources influxql.Sources, opt IteratorOptions) (Iterator, error) {
 	span := tracing.SpanFromContext(ctx)
