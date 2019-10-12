@@ -1116,7 +1116,9 @@ func newDerivativeIterator(input Iterator, opt IteratorOptions, interval Interva
 		return nil, fmt.Errorf("unsupported derivative iterator type: %T", input)
 	}
 }
-
+func NewDerivativeIterator(input Iterator, opt IteratorOptions, interval Interval, isNonNegative bool) (Iterator, error) {
+	return newDerivativeIterator(input,opt,interval,isNonNegative)
+}
 // newDifferenceIterator returns an iterator for operating on a difference() call.
 func newDifferenceIterator(input Iterator, opt IteratorOptions, isNonNegative bool) (Iterator, error) {
 	switch input := input.(type) {
