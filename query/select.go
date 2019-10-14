@@ -768,6 +768,9 @@ func buildCursor(ctx context.Context, stmt *influxql.SelectStatement, ic Iterato
 func BuildAuxIterator(ctx context.Context, ic IteratorCreator, sources influxql.Sources, opt IteratorOptions) (Iterator, error) {
 	return buildAuxIterator(ctx, ic, sources, opt)
 }
+func BuildExprIterator(ctx context.Context, expr influxql.Expr, ic IteratorCreator, sources influxql.Sources, opt IteratorOptions, selector, writeMode bool) (Iterator, error)  {
+	return buildExprIterator(ctx,expr,ic,sources,opt,selector,writeMode)
+}
 func buildAuxIterator(ctx context.Context, ic IteratorCreator, sources influxql.Sources, opt IteratorOptions) (Iterator, error) {
 	span := tracing.SpanFromContext(ctx)
 	if span != nil {
