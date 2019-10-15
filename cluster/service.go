@@ -384,12 +384,17 @@ func (s *Service) CreateIterator(conn io.ReadWriteCloser) {
 		if err != nil {
 			return err
 		}
+
 		// Generate a single iterator from all shards.
-		i, err := query.BuildAuxIterator(context.TODO(), shardGroup, opt.Sources, opt)
+		if opt.Expr != nil && !influxql.IsSelector(opt.Expr) {
+			itr, err = query.BuildExprIterator(context.TODO(), opt.Expr, shardGroup, opt.Sources, opt, false, false)
+		} else {
+			itr, err = query.BuildAuxIterator(context.TODO(), shardGroup, opt.Sources, opt)
+		}
+
 		if err != nil {
 			return err
 		}
-		itr = i
 		return nil
 	}(); err != nil {
 		s.Logger.Info("error reading CreateIterator request: %s", zap.Error(err))
