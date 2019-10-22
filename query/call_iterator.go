@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"math"
 	"sort"
+	"strings"
 	"time"
 
 	"github.com/influxdata/influxdb/query/internal/gota"
@@ -38,6 +39,9 @@ function to allow it to be included during planning.
 // NewCallIterator returns a new iterator for a Call.
 func NewCallIterator(input Iterator, opt IteratorOptions) (Iterator, error) {
 	name := opt.Expr.(*influxql.Call).Name
+	if strings.HasPrefix(name, "#") {
+		name = name[1:strings.Index(name, "|")]
+	}
 	switch name {
 	case "count":
 		return newCountIterator(input, opt)
@@ -579,7 +583,7 @@ func FloatMedianReduceSlice(a []FloatPoint) []FloatPoint {
 	// If there are an even number of points then return the mean of the two middle points.
 	sort.Sort(floatPointsByValue(a))
 	if len(a)%2 == 0 {
-		lo, hi := a[len(a)/2-1], a[(len(a)/2)]
+		lo, hi := a[len(a)/2-1], a[(len(a) / 2)]
 		return []FloatPoint{{Time: ZeroTime, Value: lo.Value + (hi.Value-lo.Value)/2}}
 	}
 	return []FloatPoint{{Time: ZeroTime, Value: a[len(a)/2].Value}}
@@ -597,7 +601,7 @@ func IntegerMedianReduceSlice(a []IntegerPoint) []FloatPoint {
 	// If there are an even number of points then return the mean of the two middle points.
 	sort.Sort(integerPointsByValue(a))
 	if len(a)%2 == 0 {
-		lo, hi := a[len(a)/2-1], a[(len(a)/2)]
+		lo, hi := a[len(a)/2-1], a[(len(a) / 2)]
 		return []FloatPoint{{Time: ZeroTime, Value: float64(lo.Value) + float64(hi.Value-lo.Value)/2}}
 	}
 	return []FloatPoint{{Time: ZeroTime, Value: float64(a[len(a)/2].Value)}}
@@ -615,7 +619,7 @@ func UnsignedMedianReduceSlice(a []UnsignedPoint) []FloatPoint {
 	// If there are an even number of points then return the mean of the two middle points.
 	sort.Sort(unsignedPointsByValue(a))
 	if len(a)%2 == 0 {
-		lo, hi := a[len(a)/2-1], a[(len(a)/2)]
+		lo, hi := a[len(a)/2-1], a[(len(a) / 2)]
 		return []FloatPoint{{Time: ZeroTime, Value: float64(lo.Value) + float64(hi.Value-lo.Value)/2}}
 	}
 	return []FloatPoint{{Time: ZeroTime, Value: float64(a[len(a)/2].Value)}}
