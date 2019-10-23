@@ -469,7 +469,7 @@ func (c *compiledField) compileDerivative(expr *influxql.Call, args []influxql.E
 		return c.compileNestedExpr(arg0)
 	default:
 		if !c.global.Interval.IsZero() && !c.global.InheritedInterval {
-			expr.Name = "#sum|derivative"
+			expr.Name = fmt.Sprintf("#sum|%v", name)
 			expr.Args[0] = &influxql.Call{Name: "last", Args: []influxql.Expr{arg0}}
 			return c.compileNestedExpr(expr.Args[0])
 			return fmt.Errorf("aggregate function required inside the call to %s", name)
