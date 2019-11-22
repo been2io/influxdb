@@ -1,10 +1,47 @@
-v1.7.8 [unreleased]
+v1.7.10 [unreleased]
+--------------------
+
+### Bugfixes
+
+-	[#15881](https://github.com/influxdata/influxdb/pull/15881): fix(tsm1): make digest safe for concurrent use.
+-	[#15863](https://github.com/influxdata/influxdb/pull/15863): fix(tsi1): index defect with negated equality filters
+-	[#15970](https://github.com/influxdata/influxdb/pull/15970): Fix compaction logic on infrequent cache snapshots.
+
+v1.7.9 [2019-10-27]
+-------------------
+
+### Bugfixes
+
+-	[#14989](https://github.com/influxdata/influxdb/pull/14989): fix(storage): guard against compaction burst throughput limit.
+-	[#15182](https://github.com/influxdata/influxdb/pull/15182): fix(tsi1): replace TSI compaction wait group with counter.
+-	[#15254](https://github.com/influxdata/influxdb/pull/15254): chore(influxdb): Update InfluxQL dependency.
+-	[#15257](https://github.com/influxdata/influxdb/pull/15257): feat(httpd): Add option to authenticate debug/pprof and ping endpoints.
+-	[#15386](https://github.com/influxdata/influxdb/pull/15386): fix(http): honor insecure-skip-very even if custom tls config is specified.
+
+### Features
+
+-	[#15341](https://github.com/influxdata/influxdb/pull/15341): Update golang version to 1.12.10
+-	[#15397](https://github.com/influxdata/influxdb/pull/15397): chore(build): remove Godeps file.
+-	[#15524](https://github.com/influxdata/influxdb/pull/15524): Update flux version to v0.50.2
+
+v1.7.8 [2019-08-20]
 -------------------
 
 ### Bugfixes
 
 -	[#14264](https://github.com/influxdata/influxdb/pull/14264): Fix Prometheus read panic.
 -	[#14271](https://github.com/influxdata/influxdb/pull/14271): Remove stray fmt.Println in tsm1.StringArrayEncodeAll.
+-	[#14286](https://github.com/influxdata/influxdb/pull/14286): Fix issue where fields re-appear after DROP MEASUREMENT.
+-	[#14295](https://github.com/influxdata/influxdb/pull/14295): Remove a dubugging println call.
+-	[#14307](https://github.com/influxdata/influxdb/pull/14307): Subquery ordering with aggregates in descending mode was wrong.
+-	[#14402](https://github.com/influxdata/influxdb/pull/14402): Fix the http handler to not mislabel series as partial.
+-	[#14557](https://github.com/influxdata/influxdb/pull/14557): fix(query): make show series exact cardinality count only distinct series.
+-	[#14593](https://github.com/influxdata/influxdb/pull/14593): fix(query/compile.go): time range was exceeding min/max bounds under ….
+
+### Features
+
+-	[#14224](https://github.com/influxdata/influxdb/pull/14224): Update flux version to v0.33.2
+-	[#14345](https://github.com/influxdata/influxdb/pull/14345): Update flux version to v0.36.2
 
 v1.7.7 [2019-06-26]
 -------------------

@@ -319,6 +319,39 @@ func TestHandler_Query_MergeEmptyResults(t *testing.T) {
 	}
 }
 
+// Ensure the handler merges series from the same result.
+func TestHandler_Query_MergeSeries(t *testing.T) {
+	h := NewHandler(false)
+	h.StatementExecutor.ExecuteStatementFn = func(stmt influxql.Statement, ctx *query.ExecutionContext) error {
+		ctx.Results <- &query.Result{StatementID: 1, Series: models.Rows([]*models.Row{
+			{
+				Name: "series0",
+				Values: [][]interface{}{
+					{float64(2.0)},
+				},
+				Partial: true,
+			},
+		})}
+		ctx.Results <- &query.Result{StatementID: 1, Series: models.Rows([]*models.Row{
+			{
+				Name: "series0",
+				Values: [][]interface{}{
+					{float64(3.0)},
+				},
+			},
+		})}
+		return nil
+	}
+
+	w := httptest.NewRecorder()
+	h.ServeHTTP(w, MustNewJSONRequest("GET", "/query?db=foo&q=SELECT+*+FROM+bar", nil))
+	if w.Code != http.StatusOK {
+		t.Fatalf("unexpected status: %d", w.Code)
+	} else if body := strings.TrimSpace(w.Body.String()); body != `{"results":[{"statement_id":1,"series":[{"name":"series0","values":[[2],[3]]}]}]}` {
+		t.Fatalf("unexpected body: %s", body)
+	}
+}
+
 // Ensure the handler can parse chunked and chunk size query parameters.
 func TestHandler_Query_Chunked(t *testing.T) {
 	h := NewHandler(false)
@@ -557,6 +590,158 @@ func TestHandler_Query_CloseNotify(t *testing.T) {
 		timer.Stop()
 	case <-timer.C:
 		t.Fatal("timeout while waiting for query to abort")
+	}
+}
+
+// Ensure the handler returns an appropriate 401 status when authentication
+// fails on ping endpoints.
+func TestHandler_Ping_ErrAuthorize(t *testing.T) {
+	h := NewHandlerWithConfig(NewHandlerConfig(WithAuthentication(), WithPingAuthEnabled()))
+	h.MetaClient.AdminUserExistsFn = func() bool { return true }
+	h.MetaClient.DatabaseFn = func(name string) *meta.DatabaseInfo {
+		return &meta.DatabaseInfo{}
+	}
+	h.MetaClient.AuthenticateFn = func(u, p string) (meta.User, error) {
+		users := []meta.UserInfo{
+			{
+				Name:  "admin",
+				Hash:  "admin",
+				Admin: true,
+			},
+			{
+				Name: "user1",
+				Hash: "abcd",
+				Privileges: map[string]influxql.Privilege{
+					"db0": influxql.ReadPrivilege,
+				},
+			},
+		}
+
+		for _, user := range users {
+			if u == user.Name {
+				if p == user.Hash {
+					return &user, nil
+				}
+				return nil, meta.ErrAuthenticate
+			}
+		}
+		return nil, meta.ErrUserNotFound
+	}
+
+	for i, tt := range []struct {
+		user     string
+		password string
+		query    string
+		code     int
+	}{
+		{
+			query: "/ping",
+			code:  http.StatusUnauthorized,
+		},
+		{
+			user:     "user1",
+			password: "abcd",
+			query:    "/ping",
+			code:     http.StatusNoContent,
+		},
+		{
+			user:     "user2",
+			password: "abcd",
+			query:    "/ping",
+			code:     http.StatusUnauthorized,
+		},
+	} {
+		w := httptest.NewRecorder()
+		r := MustNewJSONRequest("GET", tt.query, nil)
+		params := r.URL.Query()
+		if tt.user != "" {
+			params.Set("u", tt.user)
+		}
+		if tt.password != "" {
+			params.Set("p", tt.password)
+		}
+		r.URL.RawQuery = params.Encode()
+
+		h.ServeHTTP(w, r)
+		if w.Code != tt.code {
+			t.Errorf("%d. unexpected status: got=%d exp=%d\noutput: %s", i, w.Code, tt.code, w.Body.String())
+		}
+	}
+}
+
+// Ensure the handler returns an appropriate 403 status when authentication or
+// authorization fails on debug endpoints.
+func TestHandler_Debug_ErrAuthorize(t *testing.T) {
+	h := NewHandlerWithConfig(NewHandlerConfig(WithAuthentication(), WithPprofAuthEnabled()))
+	h.MetaClient.AdminUserExistsFn = func() bool { return true }
+	h.MetaClient.DatabaseFn = func(name string) *meta.DatabaseInfo {
+		return &meta.DatabaseInfo{}
+	}
+	h.MetaClient.AuthenticateFn = func(u, p string) (meta.User, error) {
+		users := []meta.UserInfo{
+			{
+				Name:  "admin",
+				Hash:  "admin",
+				Admin: true,
+			},
+			{
+				Name: "user1",
+				Hash: "abcd",
+				Privileges: map[string]influxql.Privilege{
+					"db0": influxql.ReadPrivilege,
+				},
+			},
+		}
+
+		for _, user := range users {
+			if u == user.Name {
+				if p == user.Hash {
+					return &user, nil
+				}
+				return nil, meta.ErrAuthenticate
+			}
+		}
+		return nil, meta.ErrUserNotFound
+	}
+
+	for i, tt := range []struct {
+		user     string
+		password string
+		query    string
+		code     int
+	}{
+		{
+			query: "/debug/vars",
+			code:  http.StatusUnauthorized,
+		},
+		{
+			user:     "user1",
+			password: "abcd",
+			query:    "/debug/vars",
+			code:     http.StatusForbidden,
+		},
+		{
+			user:     "user2",
+			password: "abcd",
+			query:    "/debug/vars",
+			code:     http.StatusUnauthorized,
+		},
+	} {
+		w := httptest.NewRecorder()
+		r := MustNewJSONRequest("GET", tt.query, nil)
+		params := r.URL.Query()
+		if tt.user != "" {
+			params.Set("u", tt.user)
+		}
+		if tt.password != "" {
+			params.Set("p", tt.password)
+		}
+		r.URL.RawQuery = params.Encode()
+
+		h.ServeHTTP(w, r)
+		if w.Code != tt.code {
+			t.Errorf("%d. unexpected status: got=%d exp=%d\noutput: %s", i, w.Code, tt.code, w.Body.String())
+		}
 	}
 }
 
@@ -1213,7 +1398,6 @@ func TestHandler_Flux_Auth(t *testing.T) {
 }
 
 // Ensure the handler handles ping requests correctly.
-// TODO: This should be expanded to verify the MetaClient check in servePing is working correctly
 func TestHandler_Ping(t *testing.T) {
 	h := NewHandler(false)
 	w := httptest.NewRecorder()
@@ -1590,6 +1774,19 @@ func WithAuthentication() configOption {
 	return func(c *httpd.Config) {
 		c.AuthEnabled = true
 		c.SharedSecret = "super secret key"
+	}
+}
+
+func WithPprofAuthEnabled() configOption {
+	return func(c *httpd.Config) {
+		c.PprofEnabled = true
+		c.PprofAuthEnabled = true
+	}
+}
+
+func WithPingAuthEnabled() configOption {
+	return func(c *httpd.Config) {
+		c.PingAuthEnabled = true
 	}
 }
 
