@@ -8,6 +8,7 @@ import (
 	"errors"
 	"expvar"
 	"fmt"
+	"github.com/influxdata/influxdb/cluster"
 	"io"
 	"io/ioutil"
 	"log"
@@ -92,9 +93,10 @@ type Route struct {
 
 // Handler represents an HTTP handler for the InfluxDB server.
 type Handler struct {
-	mux       *pat.PatternServeMux
-	Version   string
-	BuildType string
+	mux            *pat.PatternServeMux
+	Version        string
+	BuildType      string
+	ClusterService *cluster.Service
 
 	MetaClient interface {
 		Database(name string) *meta.DatabaseInfo
@@ -195,6 +197,14 @@ func NewHandler(c Config) *Handler {
 		Route{
 			"write", // Data-ingest route.
 			"POST", "/write", true, writeLogEnabled, h.serveWrite,
+		},
+		Route{
+			"iterator-create",
+			"POST", "/iterator/create", false, true, h.serveCreateIterator,
+		},
+		Route{
+			"iterator-columns",
+			"POST", "/iterator/columns", false, true, h.serveFieldDimensions,
 		},
 		Route{
 			"prometheus-write", // Prometheus remote write
@@ -918,9 +928,49 @@ func (h *Handler) serveOptions(w http.ResponseWriter, r *http.Request) {
 	h.writeHeader(w, http.StatusNoContent)
 }
 
+type rWCloser struct {
+	w io.Writer
+	r io.ReadCloser
+}
+
+func (rw rWCloser) Read(p []byte) (n int, err error) {
+	return rw.r.Read(p)
+}
+
+func (rw rWCloser) Write(p []byte) (n int, err error) {
+	return rw.w.Write(p)
+}
+
+func (rw rWCloser) Close() error {
+	return rw.r.Close()
+}
+
+func (h *Handler) serveCreateIterator(w http.ResponseWriter, r *http.Request) {
+	atomic.AddInt64(&h.stats.QueryRequests, 1)
+	defer func(start time.Time) {
+		atomic.AddInt64(&h.stats.QueryRequestDuration, time.Since(start).Nanoseconds())
+	}(time.Now())
+	w.WriteHeader(200)
+	rw := rWCloser{
+		w: w,
+		r: r.Body,
+	}
+
+	h.ClusterService.CreateIterator(rw)
+}
+func (h *Handler) serveFieldDimensions(w http.ResponseWriter, r *http.Request) {
+	w.WriteHeader(200)
+	rw := rWCloser{
+		w: w,
+		r: r.Body,
+	}
+	h.ClusterService.FieldDimensions(rw)
+}
+
 // servePing returns a simple response to let the client know the server is running.
 func (h *Handler) servePing(w http.ResponseWriter, r *http.Request) {
 	verbose := r.URL.Query().Get("verbose")
+	w.Header().Set("X-Discovery-Tcp", h.Config.DiscoveryTCP)
 	atomic.AddInt64(&h.stats.PingRequests, 1)
 
 	if verbose != "" && verbose != "0" && verbose != "false" {

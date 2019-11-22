@@ -41,6 +41,14 @@
   revision = "a368813c5e648fee92e5f6c30e3944ff9d5e8895"
 
 [[projects]]
+  digest = "1:e92f5581902c345eb4ceffdcd4a854fb8f73cf436d47d837d1ec98ef1fe0a214"
+  name = "github.com/StackExchange/wmi"
+  packages = ["."]
+  pruneopts = "UT"
+  revision = "5d049714c4a64225c3c79a7cf7d02f7fb5b96338"
+  version = "1.0.0"
+
+[[projects]]
   digest = "1:c06d9e11d955af78ac3bbb26bd02e01d2f61f689e1a3bce2ef6fb683ef8a7f2d"
   name = "github.com/alecthomas/kingpin"
   packages = ["."]
@@ -257,6 +265,17 @@
   revision = "9f0cb55181dd3a0a4c168d3dbc72d4aca4853126"
 
 [[projects]]
+  digest = "1:440028f55cb322d8cb5b9d5ebec298a00b7d74690a658fe6b1c0c0b44341bfae"
+  name = "github.com/go-ole/go-ole"
+  packages = [
+    ".",
+    "oleutil",
+  ]
+  pruneopts = "UT"
+  revision = "97b6244175ae18ea6eef668034fd6565847501c9"
+  version = "v1.2.4"
+
+[[projects]]
   digest = "1:ec6f9bf5e274c833c911923c9193867f3f18788c461f76f05f62bb1510e0ae65"
   name = "github.com/go-sql-driver/mysql"
   packages = ["."]
@@ -287,7 +306,7 @@
   revision = "404acd9df4cc9859d64fb9eed42e5c026187287a"
 
 [[projects]]
-  digest = "1:d367a929240dc4e604bc92a004bfffc27d0cc7add0a08cb5417fea1a5398e542"
+  digest = "1:4f5daff46de3f64b36881f69168f18b20c4f841c76e10546f5031a1a5517d102"
   name = "github.com/golang/protobuf"
   packages = [
     "proto",
@@ -305,8 +324,8 @@
     "ptypes/wrappers",
   ]
   pruneopts = "UT"
-  revision = "b4deda0973fb4c70b50d226b1af49f3da59f5265"
-  version = "v1.1.0"
+  revision = "6c65a5562fc06764971b7c5d05c76c75e84bdbf7"
+  version = "v1.3.2"
 
 [[projects]]
   digest = "1:06c8168453decb3d6db47d2fcac0f58332a535631fae7e63238e481e827f5258"
@@ -856,6 +875,30 @@
   version = "v0.2.2"
 
 [[projects]]
+  digest = "1:017945df688168959c8b1d032f69400fb723e68be7010701715adca3fc99f207"
+  name = "github.com/shirou/gopsutil"
+  packages = [
+    "cpu",
+    "disk",
+    "internal/common",
+    "mem",
+    "net",
+    "process",
+  ]
+  pruneopts = "UT"
+  revision = "4c8b404ee5c53b04b04f34b1744a26bf5d2910de"
+  source = "github.com/been2io/gopsutil"
+  version = "v2.19.6"
+
+[[projects]]
+  branch = "master"
+  digest = "1:99c6a6dab47067c9b898e8c8b13d130c6ab4ffbcc4b7cc6236c2cd0b1e344f5b"
+  name = "github.com/shirou/w32"
+  packages = ["."]
+  pruneopts = "UT"
+  revision = "bb4de0191aa41b5507caa14b0650cdbddcd9280b"
+
+[[projects]]
   branch = "master"
   digest = "1:059f0b8049ca1133b0f441ef9c998151e0b9a144cee1d7a844cfd7913476df71"
   name = "github.com/shurcooL/go"
@@ -999,13 +1042,14 @@
 
 [[projects]]
   branch = "master"
-  digest = "1:c2b57e5f2fc07090736110f3e6a09a034fc8c38dc94e796346efc461c65ff1bb"
+  digest = "1:87ecdf082696ab0e3f939c6c227451f8824fb61b32e99788d16cc5bf7d69b9b3"
   name = "golang.org/x/net"
   packages = [
     "context",
     "context/ctxhttp",
     "http/httpguts",
     "http2",
+    "http2/h2c",
     "http2/hpack",
     "idna",
     "internal/socks",
@@ -1015,7 +1059,7 @@
     "websocket",
   ]
   pruneopts = "UT"
-  revision = "a680a1efc54dd51c040b3b5ce4939ea3cf2ea0d1"
+  revision = "fc4aabc6c91483155dade6fbb627cc953a723260"
 
 [[projects]]
   branch = "master"
@@ -1216,6 +1260,14 @@
   version = "v1.13.0"
 
 [[projects]]
+  digest = "1:546db0bd0542751aff1e75052dd1fa0b0a1cee681d43bfa9ffac7c22714c1070"
+  name = "gopkg.in/fatih/pool.v2"
+  packages = ["."]
+  pruneopts = "UT"
+  revision = "010e0b745d12eaf8426c95f9c3924d81dd0b668f"
+  version = "v2.0.0"
+
+[[projects]]
   digest = "1:2ee0f15eb0fb04f918db7c2dcf39745f40d69f798ef171610a730e8a56aaa4fd"
   name = "gopkg.in/russross/blackfriday.v2"
   packages = ["."]
@@ -1270,6 +1322,7 @@
     "github.com/gogo/protobuf/gogoproto",
     "github.com/gogo/protobuf/proto",
     "github.com/gogo/protobuf/types",
+    "github.com/golang/protobuf/proto",
     "github.com/golang/snappy",
     "github.com/google/go-cmp/cmp",
     "github.com/google/go-cmp/cmp/cmpopts",
@@ -1307,6 +1360,8 @@
     "github.com/prometheus/client_golang/prometheus",
     "github.com/prometheus/client_golang/prometheus/promhttp",
     "github.com/retailnext/hllpp",
+    "github.com/shirou/gopsutil/disk",
+    "github.com/shirou/gopsutil/process",
     "github.com/spf13/cast",
     "github.com/tinylib/msgp/msgp",
     "github.com/xlab/treeprint",
@@ -1315,6 +1370,8 @@
     "go.uber.org/zap/zaptest/observer",
     "golang.org/x/crypto/bcrypt",
     "golang.org/x/crypto/ssh/terminal",
+    "golang.org/x/net/http2",
+    "golang.org/x/net/http2/h2c",
     "golang.org/x/sync/errgroup",
     "golang.org/x/sys/unix",
     "golang.org/x/text/encoding/unicode",
@@ -1322,6 +1379,7 @@
     "golang.org/x/time/rate",
     "google.golang.org/grpc",
     "google.golang.org/grpc/metadata",
+    "gopkg.in/fatih/pool.v2",
   ]
   solver-name = "gps-cdcl"
   solver-version = 1
