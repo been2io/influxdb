@@ -1,4 +1,4 @@
-FROM golang:1.12.6 as builder
+FROM hub.byted.org/alarm/golang:1.12.14 as builder
 RUN go get -u github.com/golang/dep/...
 WORKDIR /go/src/github.com/influxdata/influxdb
 #COPY Gopkg.toml Gopkg.lock ./
@@ -6,7 +6,7 @@ WORKDIR /go/src/github.com/influxdata/influxdb
 COPY . /go/src/github.com/influxdata/influxdb
 RUN go install ./cmd/...
 
-FROM debian:stretch
+FROM hub.byted.org/alarm/golang:1.12.14
 COPY --from=builder /go/bin/* /usr/bin/
 COPY --from=builder /go/src/github.com/influxdata/influxdb/etc/config.sample.toml /etc/influxdb/influxdb.conf
 
