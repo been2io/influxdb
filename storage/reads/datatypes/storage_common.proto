@@ -19,8 +19,7 @@ service Storage {
     // ReadGroup performs a group operation at storage
     rpc ReadGroup (ReadGroupRequest) returns (stream ReadResponse);
 
-
-    rpc ExecSpec (SpecRequest) returns (stream ReadResponse);
+    rpc ExecSpec (SpecRequest) returns (stream TableResponse);
 
     // TagKeys performs a read operation for tag keys
     rpc TagKeys (TagKeysRequest) returns (stream StringValuesResponse);
@@ -167,6 +166,90 @@ message ReadResponse {
     }
 
     repeated Frame frames = 1 [(gogoproto.nullable) = false];
+}
+
+message TableResponse {
+    enum FrameType {
+        option (gogoproto.goproto_enum_prefix) = false;
+
+        SERIES = 0 [(gogoproto.enumvalue_customname) = "TableFrameTypeSeries"];
+        POINTS = 1 [(gogoproto.enumvalue_customname) = "TableFrameTypePoints"];
+    }
+
+    enum DataType {
+        option (gogoproto.goproto_enum_prefix) = false;
+
+        FLOAT = 0 [(gogoproto.enumvalue_customname) = "TableDataTypeFloat"];
+        INTEGER = 1 [(gogoproto.enumvalue_customname) = "TableDataTypeInteger"];
+        UNSIGNED = 2 [(gogoproto.enumvalue_customname) = "TableDataTypeUnsigned"];
+        BOOLEAN = 3 [(gogoproto.enumvalue_customname) = "TableDataTypeBoolean"];
+        STRING = 4 [(gogoproto.enumvalue_customname) = "TableDataTypeString"];
+    }
+
+    message Frame {
+        oneof data {
+            GroupFrame group = 7;
+            SeriesFrame series = 1;
+            FloatPointsFrame float_points = 2 [(gogoproto.customname) = "FloatPoints"];
+            IntegerPointsFrame integer_points = 3 [(gogoproto.customname) = "IntegerPoints"];
+            UnsignedPointsFrame unsigned_points = 4 [(gogoproto.customname) = "UnsignedPoints"];
+            BooleanPointsFrame boolean_points = 5 [(gogoproto.customname) = "BooleanPoints"];
+            StringPointsFrame string_points = 6 [(gogoproto.customname) = "StringPoints"];
+        }
+    }
+
+    message GroupFrame {
+        // TagKeys
+        repeated bytes tag_keys = 1 [(gogoproto.customname) = "TagKeys"];
+        // PartitionKeyVals is the values of the partition key for this group, order matching ReadGroupRequest.GroupKeys
+        repeated bytes partition_key_vals = 2 [(gogoproto.customname) = "PartitionKeyVals"];
+    }
+
+    message SeriesFrame {
+        repeated Tag tags = 1 [(gogoproto.nullable) = false];
+        DataType data_type = 2;
+    }
+
+    message FloatPointsFrame {
+        repeated sfixed64 timestamps = 1;
+        repeated double values = 2;
+    }
+
+    message IntegerPointsFrame {
+        repeated sfixed64 timestamps = 1;
+        repeated int64 values = 2;
+    }
+
+    message UnsignedPointsFrame {
+        repeated sfixed64 timestamps = 1;
+        repeated uint64 values = 2;
+    }
+
+    message BooleanPointsFrame {
+        repeated sfixed64 timestamps = 1;
+        bytes values = 2;
+    }
+
+    message StringPointsFrame {
+        repeated sfixed64 timestamps = 1;
+        repeated string values = 2;
+    }
+    message ColMeta {
+        string label = 1;
+        int32 type = 2;
+    }
+    message Value {
+        string str = 1;
+        int32 nature = 2;
+    }
+    message GroupKeys {
+        repeated ColMeta meta = 1;
+        repeated Value values = 2;
+    }
+
+    GroupKeys group_keys = 1;
+    repeated ColMeta column_meta = 2;
+    repeated Frame frames = 3 [(gogoproto.nullable) = false];
 }
 
 message CapabilitiesResponse {

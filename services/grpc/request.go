@@ -1,10 +1,8 @@
-package main
+package grpc
 
 import (
 	"context"
 	"encoding/json"
-	"fmt"
-
 	"github.com/influxdata/flux"
 )
 
@@ -41,7 +39,7 @@ func (r *Request) UnmarshalJSON(data []byte) error {
 
 	createCompiler, ok := r.compilerMappings[raw.CompilerType]
 	if !ok {
-		return fmt.Errorf("unsupported compiler type %q", raw.CompilerType)
+		//log.Printf("unsupported compiler type %q", raw.CompilerType)
 	}
 
 	c := createCompiler()
@@ -83,66 +81,28 @@ func RequestFromContext(ctx context.Context) *Request {
 	}
 	return v.(*Request)
 }
+type dialect struct {
+
+}
+
+func (dialect) DialectType() flux.DialectType {
+	return ""
+}
+
+func (dialect) Encoder() flux.MultiResultEncoder {
+	return nil
+}
 
 // ProxyRequest specifies a query request and the dialect for the results.
 type ProxyRequest struct {
 	// Request is the basic query request
-	Request Request `json:"request"`
+	Spec  flux.Spec `json:"request"`
 
 	// Dialect is the result encoder
-	Dialect flux.Dialect `json:"dialect"`
-
-	// dialectMappings maps dialect types to creation methods
-	dialectMappings flux.DialectMappings
 }
 
-// WithCompilerMappings sets the compiler type mappings on the request.
-func (r *ProxyRequest) WithCompilerMappings(mappings flux.CompilerMappings) {
-	r.Request.WithCompilerMappings(mappings)
-}
 
-// WithDialectMappings sets the dialect type mappings on the request.
-func (r *ProxyRequest) WithDialectMappings(mappings flux.DialectMappings) {
-	r.dialectMappings = mappings
-}
 
-// UnmarshalJSON populates the request from the JSON data.
-// WithCompilerMappings and WithDialectMappings must have been called or an error will occur.
-func (r *ProxyRequest) UnmarshalJSON(data []byte) error {
-	type Alias ProxyRequest
-	raw := struct {
-		*Alias
-		DialectType flux.DialectType `json:"dialect_type"`
-		Dialect     json.RawMessage  `json:"dialect"`
-	}{
-		Alias: (*Alias)(r),
-	}
-	if err := json.Unmarshal(data, &raw); err != nil {
-		return err
-	}
 
-	createDialect, ok := r.dialectMappings[raw.DialectType]
-	if !ok {
-		return fmt.Errorf("unsupported dialect type %q", raw.DialectType)
-	}
 
-	d := createDialect()
-	if err := json.Unmarshal(raw.Dialect, d); err != nil {
-		return err
-	}
-	r.Dialect = d
 
-	return nil
-}
-
-func (r ProxyRequest) MarshalJSON() ([]byte, error) {
-	type Alias ProxyRequest
-	raw := struct {
-		Alias
-		DialectType flux.DialectType `json:"dialect_type"`
-	}{
-		Alias:       (Alias)(r),
-		DialectType: r.Dialect.DialectType(),
-	}
-	return json.Marshal(raw)
-}
