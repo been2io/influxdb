@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-v=v0.2.4
+v=v0.3.2
 img=hub.byted.org/alarm/influxdb:$v
 docker build -t $img .
 docker push $img

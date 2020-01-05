@@ -51,8 +51,7 @@ require (
 	github.com/prometheus/client_golang v1.0.0
 	github.com/retailnext/hllpp v0.0.0-20180308014038-101a6d2f8b52
 	github.com/segmentio/kafka-go v0.2.2 // indirect
-	github.com/shirou/gopsutil v2.19.11+incompatible
-	github.com/shirou/w32 v0.0.0-20160930032740-bb4de0191aa4 // indirect
+	github.com/shirou/gopsutil v2.19.12+incompatible
 	github.com/shurcooL/go v0.0.0-20190704215121-7189cc372560 // indirect
 	github.com/shurcooL/sanitized_anchor_name v1.0.0 // indirect
 	github.com/spf13/cast v1.3.0
@@ -70,7 +69,4 @@ require (
 	gonum.org/v1/gonum v0.6.0 // indirect
 	google.golang.org/grpc v1.21.1
 	gopkg.in/fatih/pool.v2 v2.0.0
-	gopkg.in/russross/blackfriday.v2 v2.0.1 // indirect
 )
-
-replace gopkg.in/russross/blackfriday.v2 v2.0.1 => github.com/russross/blackfriday/v2 v2.0.1

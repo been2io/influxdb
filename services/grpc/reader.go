@@ -21,5 +21,4 @@ func (r *Reader) Read(spec flux.Spec) (flux.TableIterator, error) {
 		}
 	}
 	return tables, nil
-
 }
