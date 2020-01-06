@@ -5,6 +5,7 @@ import (
 	"crypto/tls"
 	"fmt"
 	"github.com/influxdata/influxdb/models"
+	"github.com/influxdata/influxdb/services/grpc"
 	"go.uber.org/zap"
 	"golang.org/x/net/http2"
 	"golang.org/x/net/http2/h2c"
@@ -185,6 +186,11 @@ func (s *Service) Open() error {
 
 	// Begin listening for requests in a separate goroutine.
 	go s.serveTCP()
+	grpc := &grpc.Service{
+		Listener:   s.ln,
+		Controller: s.Handler.Controller,
+	}
+	go grpc.Open()
 	return nil
 }
 

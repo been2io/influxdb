@@ -7,14 +7,14 @@ import (
 type Service struct {
 	Listener   net.Listener
 	Store      store
-	controller controller
+	Controller controller
 }
 
 func (s *Service) Open() error {
 	server := server{
-		controller: s.controller,
+		controller: s.Controller,
 		store:      s.Store,
 	}
-	go server.Serve(s.Listener)
+	server.Serve(s.Listener)
 	return nil
 }
