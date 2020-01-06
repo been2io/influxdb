@@ -1,6 +1,8 @@
 package grpc
 
-import "github.com/influxdata/flux"
+import (
+	"github.com/influxdata/flux"
+)
 
 type Reader struct {
 	Addr [][] string

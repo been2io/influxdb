@@ -49,7 +49,6 @@ func (s *server) ExecSpec(r *datatypes.SpecRequest, stream datatypes.Storage_Exe
 		return result.Tables().Do(func(table flux.Table) error {
 			return table.Do(func(reader flux.ColReader) error {
 				groupKey := reader.Key()
-				log.Println("key", groupKey)
 				var groupKeyMeta []*datatypes.TableResponse_ColMeta
 				var values []*datatypes.TableResponse_Value
 				for i, c := range groupKey.Cols() {
@@ -59,7 +58,6 @@ func (s *server) ExecSpec(r *datatypes.SpecRequest, stream datatypes.Storage_Exe
 					})
 
 					v := groupKey.Value(i)
-					log.Println(v)
 					nature := v.Type().(semantic.Nature)
 					values = append(values, &datatypes.TableResponse_Value{
 						Str:    v.Time().String(),
@@ -158,6 +156,7 @@ func (s *server) Serve(ln net.Listener) {
 	grpcServer := grpc.NewServer()
 	datatypes.RegisterStorageServer(grpcServer, s)
 	go func() {
+		log.Printf("start grpc on addr %v", ln.Addr())
 		if err := grpcServer.Serve(ln); err != nil {
 			log.Fatalf("failed to serve: %v", err)
 		}

@@ -14,7 +14,6 @@ import (
 	"github.com/influxdata/influxdb/storage/reads/datatypes"
 	"google.golang.org/grpc"
 	"io"
-	"log"
 )
 
 type Client struct {
@@ -27,7 +26,7 @@ func (c *Client) Read(spec flux.Spec) (chan flux.ColReader, error) {
 	if err != nil {
 		return nil, err
 	}
-	defer conn.Close()
+
 	storageClient := datatypes.NewStorageClient(conn)
 	request := ProxyRequest{
 		Spec: spec,
@@ -42,6 +41,7 @@ func (c *Client) Read(spec flux.Spec) (chan flux.ColReader, error) {
 	}
 	ch := make(chan flux.ColReader)
 	go func() {
+		defer conn.Close()
 		defer close(ch)
 		for {
 			resp, err := client.Recv()
@@ -55,7 +55,6 @@ func (c *Client) Read(spec flux.Spec) (chan flux.ColReader, error) {
 				var cols []flux.ColMeta
 				var v []values.Value
 				for _, keys := range resp.GroupKeys.Values {
-					log.Println(resp.GroupKeys)
 					t, err := values.NewFromString(semantic.Nature(keys.Nature), keys.Str)
 					if err != nil {
 						panic(err)
