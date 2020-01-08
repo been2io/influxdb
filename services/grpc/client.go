@@ -14,6 +14,7 @@ import (
 	"github.com/influxdata/influxdb/storage/reads/datatypes"
 	"google.golang.org/grpc"
 	"io"
+	"time"
 )
 
 type Client struct {
@@ -22,7 +23,7 @@ type Client struct {
 
 func (c *Client) Read(spec flux.Spec) (chan flux.ColReader, error) {
 	address := c.Addrs[0]
-	conn, err := grpc.Dial(address, grpc.WithInsecure(), grpc.WithBlock())
+	conn, err := grpc.Dial(address, grpc.WithInsecure())
 	if err != nil {
 		return nil, err
 	}
@@ -35,7 +36,8 @@ func (c *Client) Read(spec flux.Spec) (chan flux.ColReader, error) {
 	if err != nil {
 		return nil, err
 	}
-	client, err := storageClient.ExecSpec(context.TODO(), &datatypes.SpecRequest{Request: body})
+	ctx, _ := context.WithTimeout(context.Background(), 5*time.Second)
+	client, err := storageClient.ExecSpec(ctx, &datatypes.SpecRequest{Request: body})
 	if err != nil {
 		return nil, err
 	}

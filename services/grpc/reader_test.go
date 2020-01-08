@@ -89,5 +89,8 @@ func TestReader(t *testing.T) {
 			{Parent: "range", Child: "sum"},
 		},
 	}
-	reader.Read(expQ)
+	_, err = reader.Read(expQ)
+	if err!=nil{
+		panic(err)
+	}
 }
