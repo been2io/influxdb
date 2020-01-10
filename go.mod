@@ -26,7 +26,8 @@ require (
 	github.com/google/go-cmp v0.3.0
 	github.com/googleapis/gax-go v1.0.3 // indirect
 	github.com/goreleaser/archive v1.1.3 // indirect
-	github.com/influxdata/flux v0.50.2
+	github.com/goreleaser/goreleaser v0.94.0 // indirect
+	github.com/influxdata/flux v0.58.4
 	github.com/influxdata/influxql v1.0.1
 	github.com/influxdata/line-protocol v0.0.0-20190220025226-a3afd890113f // indirect
 	github.com/influxdata/roaring v0.0.0-20180809181101-fc520f41fab6
@@ -69,4 +70,5 @@ require (
 	gonum.org/v1/gonum v0.6.0 // indirect
 	google.golang.org/grpc v1.21.1
 	gopkg.in/fatih/pool.v2 v2.0.0
+	gopkg.in/src-d/go-git.v4 v4.8.1 // indirect
 )

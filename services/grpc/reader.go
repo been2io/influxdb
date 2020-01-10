@@ -22,5 +22,6 @@ func (r *Reader) Read(spec flux.Spec) (flux.TableIterator, error) {
 			tables.Add(colReader)
 		}
 	}
+	tables.Done()
 	return tables, nil
 }

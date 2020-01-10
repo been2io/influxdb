@@ -36,7 +36,7 @@ func (c *Client) Read(spec flux.Spec) (chan flux.ColReader, error) {
 	if err != nil {
 		return nil, err
 	}
-	ctx, _ := context.WithTimeout(context.Background(), 5*time.Second)
+	ctx, _ := context.WithTimeout(context.Background(), 60*time.Second)
 	client, err := storageClient.ExecSpec(ctx, &datatypes.SpecRequest{Request: body})
 	if err != nil {
 		return nil, err

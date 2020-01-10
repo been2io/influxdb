@@ -3,10 +3,12 @@ package grpc
 import (
 	"context"
 	"encoding/json"
+	"fmt"
 	"github.com/gogo/protobuf/types"
 	"github.com/influxdata/flux"
 	"github.com/influxdata/flux/repl"
 	"github.com/influxdata/flux/semantic"
+	_ "github.com/influxdata/influxdb/flux/stdlib/influxdata/influxdb"
 	"github.com/influxdata/influxdb/storage/reads"
 	"github.com/influxdata/influxdb/storage/reads/datatypes"
 	"github.com/prometheus/client_golang/prometheus"
@@ -29,6 +31,7 @@ type server struct {
 }
 
 func (s *server) ExecSpec(r *datatypes.SpecRequest, stream datatypes.Storage_ExecSpecServer) error {
+	defer log.Println("ennd#####################")
 	req := new(ProxyRequest)
 	err := json.Unmarshal(r.Request, req)
 	if err != nil {
@@ -37,8 +40,13 @@ func (s *server) ExecSpec(r *datatypes.SpecRequest, stream datatypes.Storage_Exe
 	q, err := s.controller.Query(context.TODO(), repl.Compiler{
 		Spec: &req.Spec,
 	})
+	req.Spec.Walk(func(o *flux.Operation) error {
+		log.Println(o.Spec.Kind(), ":", o.ID)
+		return nil
+	})
 	if err != nil {
-		panic(err)
+		log.Println(err)
+		return err
 	}
 	resultIterator := flux.NewResultIteratorFromQuery(q)
 	for resultIterator.More() {
@@ -59,10 +67,25 @@ func (s *server) ExecSpec(r *datatypes.SpecRequest, stream datatypes.Storage_Exe
 
 					v := groupKey.Value(i)
 					nature := v.Type().(semantic.Nature)
-					values = append(values, &datatypes.TableResponse_Value{
-						Str:    v.Time().String(),
-						Nature: int32(nature),
-					})
+					inatuer := int32(nature)
+					switch c.Type {
+					case flux.TTime:
+						values = append(values, &datatypes.TableResponse_Value{
+							Str:    v.Time().String(),
+							Nature: int32(nature),
+						})
+					case flux.TString:
+						values = append(values, &datatypes.TableResponse_Value{
+							Str:    v.Str(),
+							Nature: inatuer,
+						})
+					case flux.TFloat:
+						values = append(values, &datatypes.TableResponse_Value{
+							Str:    fmt.Sprintf("%f", v.Float()),
+							Nature: inatuer,
+						})
+
+					}
 
 				}
 				response := datatypes.TableResponse{

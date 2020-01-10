@@ -69,16 +69,19 @@ func (t *mergeTable) Do(f func(flux.ColReader) error) error {
 	return f(<-t.readers)
 }
 
-func (mergeTable) Done() {
-	panic("implement me")
+func (t *mergeTable) Done() {
+	close(t.readers)
 }
 
-func (mergeTable) Empty() bool {
-	panic("implement me")
+func (t *mergeTable) Empty() bool {
+	if len(t.readers) != 0 {
+		return false
+	}
+	return true
 }
 
 type tables struct {
-	m      map[string]*mergeTable
+	m map[string]*mergeTable
 }
 
 func (cr *tables) Do(f func(flux.Table) error) error {
@@ -98,4 +101,9 @@ func (cr *tables) Add(reader flux.ColReader) {
 		cr.m[key] = r
 	}
 	r.Add(reader)
+}
+func (cr *tables) Done() {
+	for _, v := range cr.m {
+		v.Done()
+	}
 }

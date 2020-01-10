@@ -6,6 +6,7 @@ import (
 	"github.com/influxdata/flux/execute"
 	"github.com/influxdata/flux/plan"
 	"github.com/influxdata/flux/semantic"
+	"github.com/influxdata/flux/stdlib/influxdata/influxdb"
 	"github.com/influxdata/flux/stdlib/universe"
 )
 
@@ -17,6 +18,31 @@ func init() {
 		PushDownReadTagKeysRule{},
 		PushDownReadTagValuesRule{},
 	)
+	plan.RegisterLogicalRules(ReplaceFromRule{})
+}
+
+type ReplaceFromRule struct {
+	Filename string
+}
+
+func (ReplaceFromRule) Name() string {
+	return "ReplaceFromRule"
+}
+
+func (ReplaceFromRule) Pattern() plan.Pattern {
+	return plan.Pat(influxdb.FromKind)
+}
+
+func (r ReplaceFromRule) Rewrite(n plan.Node) (plan.Node, bool, error) {
+	spec := n.ProcedureSpec().(*influxdb.FromProcedureSpec)
+
+	new := &FromProcedureSpec{
+		Bucket:   spec.Bucket,
+	}
+	if err := n.ReplaceSpec(new); err != nil {
+		return nil, false, err
+	}
+	return n, true, nil
 }
 
 // PushDownGroupRule pushes down a group operation to storage

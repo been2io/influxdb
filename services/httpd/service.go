@@ -186,8 +186,12 @@ func (s *Service) Open() error {
 
 	// Begin listening for requests in a separate goroutine.
 	go s.serveTCP()
+	ln, err := net.Listen("tcp", ":8899")
+	if err != nil {
+		panic(err)
+	}
 	grpc := &grpc.Service{
-		Listener:   s.ln,
+		Listener:ln,
 		Controller: s.Handler.Controller,
 	}
 	go grpc.Open()
