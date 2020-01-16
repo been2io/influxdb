@@ -9,6 +9,8 @@ import (
 	"go.uber.org/zap"
 	"golang.org/x/net/http2"
 	"golang.org/x/net/http2/h2c"
+	"io/ioutil"
+	"log"
 	"net"
 	"net/http"
 	"os"
@@ -195,7 +197,47 @@ func (s *Service) Open() error {
 		Controller: s.Handler.Controller,
 	}
 	go grpc.Open()
+	go s.register()
 	return nil
+}
+func (s *Service) register() {
+	args := strings.Split(s.ln.Addr().String(), ":")
+	if len(args) == 0 {
+		log.Printf("reigster error bad influxdb addr %v", s.ln.Addr())
+		return
+	}
+	port := args[len(args)-1]
+	if addr, ok := os.LookupEnv("PROXY_ADDR"); ok {
+		url := fmt.Sprintf("http://%v/register?port=%v", addr, port)
+		if labels, ok := os.LookupEnv("NODE_LABELS"); ok {
+			url = fmt.Sprintf("%v&labels=%v", url, labels)
+		}
+		if disable, ok := os.LookupEnv("NODE_DISABLE"); ok {
+			url = fmt.Sprintf("%v&disable=%v", url, disable)
+		}
+		for i := 0; i < 100; i++ {
+			if response, err := http.Post(url, "", nil); err == nil {
+				if response.StatusCode == 200 {
+					log.Printf("register to %v success", url)
+					return
+				} else {
+					b, err := ioutil.ReadAll(response.Body)
+					if err != nil {
+						log.Println(err)
+					}
+
+					log.Printf("register to %v bad request :status %v,%v", url, response.StatusCode,string(b))
+
+				}
+			} else {
+				log.Printf("register to %v err:%v", url, err)
+			}
+			time.Sleep(6 * time.Second)
+		}
+
+	} else {
+		log.Println("no register info")
+	}
 }
 
 // Close closes the underlying listener.
