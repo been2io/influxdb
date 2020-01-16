@@ -8,6 +8,7 @@ import (
 	"go.uber.org/zap"
 	"golang.org/x/net/http2"
 	"golang.org/x/net/http2/h2c"
+	"io/ioutil"
 	"log"
 	"net"
 	"net/http"
@@ -197,14 +198,25 @@ func (s *Service) register() {
 	}
 	port := args[len(args)-1]
 	if addr, ok := os.LookupEnv("PROXY_ADDR"); ok {
+		url := fmt.Sprintf("http://%v/register?port=%v", addr, port)
+		if labels, ok := os.LookupEnv("NODE_LABELS"); ok {
+			url = fmt.Sprintf("%v&labels=%v", url, labels)
+		}
+		if disable, ok := os.LookupEnv("NODE_DISABLE"); ok {
+			url = fmt.Sprintf("%v&disable=%v", url, disable)
+		}
 		for i := 0; i < 100; i++ {
-			url := fmt.Sprintf("http://%v/register?port=%v", addr, port)
 			if response, err := http.Post(url, "", nil); err == nil {
 				if response.StatusCode == 200 {
 					log.Printf("register to %v success", url)
 					return
 				} else {
-					log.Printf("register to %v bad request : %v", url, response.StatusCode)
+					b, err := ioutil.ReadAll(response.Body)
+					if err != nil {
+						log.Println(err)
+					}
+
+					log.Printf("register to %v bad request :status %v,%v", url, response.StatusCode,string(b))
 
 				}
 			} else {
