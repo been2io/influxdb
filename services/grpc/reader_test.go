@@ -30,18 +30,19 @@ func TestReader(t *testing.T) {
 				{Label: "_stop", Type: flux.TTime},
 				{Label: "_time", Type: flux.TTime},
 				{Label: "_value", Type: flux.TFloat},
+				{Label: "_field", Type: flux.TString},
 			},
 			Data: [][]interface{}{
-				{execute.Time(0), execute.Time(100), execute.Time(0), 0.0},
-				{execute.Time(0), execute.Time(100), execute.Time(10), 1.0},
-				{execute.Time(0), execute.Time(100), execute.Time(20), 2.0},
-				{execute.Time(0), execute.Time(100), execute.Time(30), 3.0},
-				{execute.Time(0), execute.Time(100), execute.Time(40), 4.0},
-				{execute.Time(0), execute.Time(100), execute.Time(50), 5.0},
-				{execute.Time(0), execute.Time(100), execute.Time(60), 6.0},
-				{execute.Time(0), execute.Time(100), execute.Time(70), 7.0},
-				{execute.Time(0), execute.Time(100), execute.Time(80), 8.0},
-				{execute.Time(0), execute.Time(100), execute.Time(90), 9.0},
+				{execute.Time(0), execute.Time(100), execute.Time(0), 0.0, "a"},
+				{execute.Time(0), execute.Time(100), execute.Time(10), 1.0, "a"},
+				{execute.Time(0), execute.Time(100), execute.Time(20), 2.0, "a"},
+				{execute.Time(0), execute.Time(100), execute.Time(30), 3.0, "a"},
+				{execute.Time(0), execute.Time(100), execute.Time(40), 4.0, "a"},
+				{execute.Time(0), execute.Time(100), execute.Time(50), 5.0, "a"},
+				{execute.Time(0), execute.Time(100), execute.Time(60), 6.0, "a"},
+				{execute.Time(0), execute.Time(100), execute.Time(70), 7.0, "a"},
+				{execute.Time(0), execute.Time(100), execute.Time(80), 8.0, "a"},
+				{execute.Time(0), execute.Time(100), execute.Time(90), 9.0, "a"},
 			},
 		}})
 		return &q, nil
@@ -164,7 +165,7 @@ func TestReadNoData(t *testing.T) {
 		panic(err)
 	}
 
-	err =ti.Do(func(table flux.Table) error {
+	err = ti.Do(func(table flux.Table) error {
 
 		log.Println(table.Empty())
 		table.Do(func(reader flux.ColReader) error {
@@ -176,7 +177,7 @@ func TestReadNoData(t *testing.T) {
 		})
 		return nil
 	})
-	if err!=nil{
+	if err != nil {
 		panic(err)
 	}
 

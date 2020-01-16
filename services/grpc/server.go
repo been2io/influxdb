@@ -67,7 +67,7 @@ func (s *server) ExecSpec(r *datatypes.SpecRequest, stream datatypes.Storage_Exe
 
 					v := groupKey.Value(i)
 					nature := v.Type().(semantic.Nature)
-					inatuer := int32(nature)
+					tNature := int32(nature)
 					switch c.Type {
 					case flux.TTime:
 						values = append(values, &datatypes.TableResponse_Value{
@@ -77,12 +77,27 @@ func (s *server) ExecSpec(r *datatypes.SpecRequest, stream datatypes.Storage_Exe
 					case flux.TString:
 						values = append(values, &datatypes.TableResponse_Value{
 							Str:    v.Str(),
-							Nature: inatuer,
+							Nature: tNature,
 						})
 					case flux.TFloat:
 						values = append(values, &datatypes.TableResponse_Value{
 							Str:    fmt.Sprintf("%f", v.Float()),
-							Nature: inatuer,
+							Nature: tNature,
+						})
+					case flux.TInt:
+						values = append(values, &datatypes.TableResponse_Value{
+							Str:    fmt.Sprintf("%v", v.Int()),
+							Nature: tNature,
+						})
+					case flux.TUInt:
+						values = append(values, &datatypes.TableResponse_Value{
+							Str:    fmt.Sprintf("%v", v.UInt()),
+							Nature: tNature,
+						})
+					case flux.TBool:
+						values = append(values, &datatypes.TableResponse_Value{
+							Str:    fmt.Sprintf("%v", v.Bool()),
+							Nature: tNature,
 						})
 
 					}
@@ -123,6 +138,26 @@ func (s *server) ExecSpec(r *datatypes.SpecRequest, stream datatypes.Storage_Exe
 						frame.Data = &datatypes.TableResponse_Frame_FloatPoints{
 							FloatPoints: &datatypes.TableResponse_FloatPointsFrame{
 								Values: reader.Floats(i).Float64Values(),
+							},
+						}
+
+					case flux.TUInt:
+						frame.Data = &datatypes.TableResponse_Frame_UnsignedPoints{
+							UnsignedPoints: &datatypes.TableResponse_UnsignedPointsFrame{
+								Values: reader.UInts(i).Uint64Values(),
+							},
+						}
+					case flux.TString:
+						var strs []string
+						s := reader.Strings(i)
+						l := s.Len()
+						for j := 0; j <l; j++ {
+							strs = append(strs, s.ValueString(j))
+						}
+
+						frame.Data = &datatypes.TableResponse_Frame_StringPoints{
+							StringPoints: &datatypes.TableResponse_StringPointsFrame{
+								Values: strs,
 							},
 						}
 

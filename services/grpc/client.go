@@ -97,6 +97,17 @@ func (c *Client) Read(spec flux.Spec) (chan flux.ColReader, error) {
 							arrow.AppendInt(builder, v)
 
 						}
+					case flux.TString:
+						for _, v := range resp.Frames[i].GetStringPoints().Values {
+							arrow.AppendString(builder, v)
+
+						}
+					case flux.TBool:
+						panic("reader not support bool")
+					case flux.TUInt:
+						for _, v := range resp.Frames[i].GetUnsignedPoints().Values {
+							arrow.AppendUint(builder, v)
+						}
 					}
 					values = append(values, builder.NewArray())
 
