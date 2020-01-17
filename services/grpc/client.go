@@ -3,6 +3,7 @@ package grpc
 import (
 	"context"
 	"encoding/json"
+	"errors"
 	"fmt"
 	"github.com/apache/arrow/go/arrow/array"
 	"github.com/influxdata/flux"
@@ -73,6 +74,7 @@ func (c *Client) Read(spec flux.Spec) (chan flux.ColReader, error) {
 				return execute.NewGroupKey(cols, v)
 			}()
 			var values [] array.Interface
+
 			colMeta := func() []flux.ColMeta {
 				var cols []flux.ColMeta
 				for i, m := range resp.ColumnMeta {
@@ -114,6 +116,15 @@ func (c *Client) Read(spec flux.Spec) (chan flux.ColReader, error) {
 				}
 				return cols
 			}()
+			timeIdx := execute.ColIdx("_time", colMeta)
+			if timeIdx == -1 {
+				startIdx := execute.ColIdx("_start", colMeta)
+				if startIdx == -1 {
+					panic(errors.New("_time and _start column required"))
+				}
+				colMeta = append(colMeta, flux.ColMeta{Type:flux.TTime,Label:"_time"})
+				values = append(values, values[startIdx])
+			}
 			tb := &arrow.TableBuffer{
 				GroupKey: groupKey,
 				Columns:  colMeta,

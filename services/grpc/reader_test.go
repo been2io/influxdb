@@ -28,7 +28,7 @@ func TestReader(t *testing.T) {
 			ColMeta: []flux.ColMeta{
 				{Label: "_start", Type: flux.TTime},
 				{Label: "_stop", Type: flux.TTime},
-				{Label: "_time", Type: flux.TTime},
+				{Label: "_ttime", Type: flux.TTime},
 				{Label: "_value", Type: flux.TFloat},
 				{Label: "_field", Type: flux.TString},
 			},
@@ -97,7 +97,15 @@ func TestReader(t *testing.T) {
 
 		log.Println(table.Empty())
 		table.Do(func(reader flux.ColReader) error {
-			log.Println(reader.Key().String())
+			log.Println(reader.Key().String(), reader.Len())
+			for i:= 0; i < len(reader.Cols()); i++ {
+				c := reader.Cols()[i]
+
+				log.Println(i,":")
+				log.Print(c)
+				log.Print(" ")
+			}
+
 			return nil
 		})
 		return nil
