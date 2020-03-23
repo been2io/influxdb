@@ -11,14 +11,15 @@ import (
 
 func TestService(t *testing.T) {
 	reader := Reader{
-		Addr: [][]string{[]string{"localhost:8899"}},
+		Addr: [][]string{[]string{"127.0.0.1:8899"}},
 	}
 	expQ := flux.Spec{
+		Now: time.Now(),
 		Operations: []*flux.Operation{
 			{
 				ID: "from",
 				Spec: &influxdb.FromOpSpec{
-					Bucket: "a",
+					Bucket: "test",
 				},
 			},
 			{
@@ -48,16 +49,16 @@ func TestService(t *testing.T) {
 		panic(err)
 	}
 
-	err=ti.Do(func(table flux.Table) error {
+	err = ti.Do(func(table flux.Table) error {
 
 		log.Println(table.Empty())
 		table.Do(func(reader flux.ColReader) error {
-			log.Println(reader.Key().String())
+			log.Println(reader.Key().String(),reader.Len())
 			return nil
 		})
 		return nil
 	})
-	if err!=nil{
+	if err != nil {
 		panic(err)
 	}
 

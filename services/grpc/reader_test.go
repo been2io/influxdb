@@ -100,10 +100,10 @@ func TestReader(t *testing.T) {
 			log.Println(reader.Key().String(), reader.Len())
 			for i:= 0; i < len(reader.Cols()); i++ {
 				c := reader.Cols()[i]
+				log.Println(i,":",c)
+				for i:=0;i<reader.Len();i++{
 
-				log.Println(i,":")
-				log.Print(c)
-				log.Print(" ")
+				}
 			}
 
 			return nil

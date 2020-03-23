@@ -109,9 +109,22 @@ func (s *server) ExecSpec(r *datatypes.SpecRequest, stream datatypes.Storage_Exe
 						Values: values,
 					},
 				}
+				hasTime := false
+				for _, c := range reader.Cols() {
+					if c.Label == "_time" {
+						hasTime = true
+					}
+				}
 				for i, c := range reader.Cols() {
+					label := c.Label
+
+					if !hasTime{
+						if label == "_start" {
+							label = "_time"
+						}
+					}
 					response.ColumnMeta = append(response.ColumnMeta, &datatypes.TableResponse_ColMeta{
-						Label: c.Label,
+						Label: label,
 						Type:  int32(c.Type),
 					})
 					var frame datatypes.TableResponse_Frame
@@ -151,7 +164,7 @@ func (s *server) ExecSpec(r *datatypes.SpecRequest, stream datatypes.Storage_Exe
 						var strs []string
 						s := reader.Strings(i)
 						l := s.Len()
-						for j := 0; j <l; j++ {
+						for j := 0; j < l; j++ {
 							strs = append(strs, s.ValueString(j))
 						}
 

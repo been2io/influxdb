@@ -7,7 +7,7 @@ import (
 	"time"
 
 	"github.com/davecgh/go-spew/spew"
-	"github.com/influxdata/influxdb/influxql"
+	"github.com/influxdata/influxql"
 )
 
 func TestWriteShardRequestBinary(t *testing.T) {
