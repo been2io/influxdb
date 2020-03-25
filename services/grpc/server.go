@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"github.com/gogo/protobuf/types"
 	"github.com/influxdata/flux"
+	"github.com/influxdata/flux/execute"
 	"github.com/influxdata/flux/repl"
 	"github.com/influxdata/flux/semantic"
 	_ "github.com/influxdata/influxdb/flux/stdlib/influxdata/influxdb"
@@ -117,11 +118,13 @@ func (s *server) ExecSpec(r *datatypes.SpecRequest, stream datatypes.Storage_Exe
 				}
 				for i, c := range reader.Cols() {
 					label := c.Label
-
 					if !hasTime{
 						if label == "_start" {
 							label = "_time"
 						}
+					}
+					if label == execute.DefaultStartColLabel || label == execute.DefaultStopColLabel{
+						continue
 					}
 					response.ColumnMeta = append(response.ColumnMeta, &datatypes.TableResponse_ColMeta{
 						Label: label,
@@ -130,6 +133,9 @@ func (s *server) ExecSpec(r *datatypes.SpecRequest, stream datatypes.Storage_Exe
 					var frame datatypes.TableResponse_Frame
 					switch c.Type {
 					case flux.TTime:
+						/*for _,iv:=range reader.Times(i).Int64Values(){
+							log.Println(time.Unix(0,iv))
+						}*/
 						frame.Data = &datatypes.TableResponse_Frame_IntegerPoints{
 							IntegerPoints: &datatypes.TableResponse_IntegerPointsFrame{
 								Values: reader.Times(i).Int64Values(),
@@ -167,7 +173,6 @@ func (s *server) ExecSpec(r *datatypes.SpecRequest, stream datatypes.Storage_Exe
 						for j := 0; j < l; j++ {
 							strs = append(strs, s.ValueString(j))
 						}
-
 						frame.Data = &datatypes.TableResponse_Frame_StringPoints{
 							StringPoints: &datatypes.TableResponse_StringPointsFrame{
 								Values: strs,
