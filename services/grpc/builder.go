@@ -66,7 +66,12 @@ func (t *mergeTable) Cols() []flux.ColMeta {
 }
 
 func (t *mergeTable) Do(f func(flux.ColReader) error) error {
-	return f(<-t.readers)
+	for r := range t.readers {
+		if err := f(r); err != nil {
+			return err
+		}
+	}
+	return nil
 }
 
 func (t *mergeTable) Done() {
