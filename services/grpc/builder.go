@@ -5,6 +5,8 @@ import (
 	"github.com/influxdata/flux/execute"
 	"github.com/influxdata/flux/memory"
 	"github.com/influxdata/flux/plan"
+	"log"
+	"sync"
 )
 
 type mergeTableBuilder struct {
@@ -84,13 +86,19 @@ func (t *mergeTable) Empty() bool {
 	}
 	return true
 }
+func NewTables(size int) *tables {
+	return &tables{m: map[string]*mergeTable{}, new: make(chan *mergeTable, size)}
+}
 
 type tables struct {
-	m map[string]*mergeTable
+	m   map[string]*mergeTable
+	new chan *mergeTable
+	err chan error
+	rw  sync.RWMutex
 }
 
 func (cr *tables) Do(f func(flux.Table) error) error {
-	for _, v := range cr.m {
+	for v := range cr.new {
 		if err := f(v); err != nil {
 			return err
 		}
@@ -98,17 +106,33 @@ func (cr *tables) Do(f func(flux.Table) error) error {
 	return nil
 }
 
-func (cr *tables) Add(reader flux.ColReader) {
+func (cr *tables) Add(reader flux.ColReader) error {
+	defer func() {
+		if err := recover(); err != nil {
+			log.Println(err)
+		}
+
+	}()
 	key := reader.Key().String()
+	var new bool
+	cr.rw.Lock()
 	r, ok := cr.m[key]
 	if !ok {
 		r = newMergeTable(reader.Key(), reader.Cols())
 		cr.m[key] = r
+		new = true
+	}
+	cr.rw.Unlock()
+	if new {
+		cr.new <- r
 	}
 	r.Add(reader)
+	return nil
 }
 func (cr *tables) Done() {
+	close(cr.new)
 	for _, v := range cr.m {
 		v.Done()
 	}
+
 }

@@ -13,6 +13,17 @@ import (
 	"time"
 )
 
+type testsourcehanlder struct {
+}
+
+func (t testsourcehanlder) UpdateWatermark(time int64) error {
+	return nil
+}
+
+func (t testsourcehanlder) Finish(err error) {
+	log.Println(err)
+}
+
 func TestReader(t *testing.T) {
 	lis, err := net.Listen("tcp", "")
 	if err != nil {
@@ -89,7 +100,8 @@ func TestReader(t *testing.T) {
 			{Parent: "range", Child: "sum"},
 		},
 	}
-	ti, err := reader.Read(expQ)
+	ctx := context.WithValue(context.Background(), "source", testsourcehanlder{})
+	ti, err := reader.Read(ctx, expQ)
 	if err != nil {
 		panic(err)
 	}
@@ -98,11 +110,10 @@ func TestReader(t *testing.T) {
 		log.Println(table.Empty())
 		table.Do(func(reader flux.ColReader) error {
 			log.Println(reader.Key().String(), reader.Len())
-			for i:= 0; i < len(reader.Cols()); i++ {
+			for i := 0; i < len(reader.Cols()); i++ {
 				c := reader.Cols()[i]
-				log.Println(i,":",c)
-				for i:=0;i<reader.Len();i++{
-
+				log.Println(i, ":", c)
+				for i := 0; i < reader.Len(); i++ {
 				}
 			}
 
@@ -168,11 +179,11 @@ func TestReadNoData(t *testing.T) {
 			{Parent: "range", Child: "sum"},
 		},
 	}
-	ti, err := reader.Read(expQ)
+	ctx := context.WithValue(context.Background(), "source", testsourcehanlder{})
+	ti, err := reader.Read(ctx, expQ)
 	if err != nil {
 		panic(err)
 	}
-
 	err = ti.Do(func(table flux.Table) error {
 
 		log.Println(table.Empty())

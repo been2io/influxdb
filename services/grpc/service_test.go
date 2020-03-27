@@ -1,6 +1,7 @@
 package grpc
 
 import (
+	"context"
 	"github.com/influxdata/flux"
 	"github.com/influxdata/flux/stdlib/influxdata/influxdb"
 	"github.com/influxdata/flux/stdlib/universe"
@@ -44,7 +45,7 @@ func TestService(t *testing.T) {
 			{Parent: "range", Child: "sum"},
 		},
 	}
-	ti, err := reader.Read(expQ)
+	ti, err := reader.Read(context.Background(),expQ)
 	if err != nil {
 		panic(err)
 	}
