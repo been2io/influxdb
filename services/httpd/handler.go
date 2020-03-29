@@ -9,6 +9,7 @@ import (
 	"expvar"
 	"fmt"
 	"github.com/influxdata/influxdb/cluster"
+	"google.golang.org/grpc"
 	"io"
 	"io/ioutil"
 	"log"
@@ -97,8 +98,8 @@ type Handler struct {
 	Version        string
 	BuildType      string
 	ClusterService *cluster.Service
-
-	MetaClient interface {
+	GRPCServer     *grpc.Server
+	MetaClient     interface {
 		Database(name string) *meta.DatabaseInfo
 		Databases() []meta.DatabaseInfo
 		Authenticate(username, password string) (ui meta.User, err error)
@@ -450,7 +451,9 @@ func (h *Handler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 
 	// Maintain backwards compatibility by using unwrapped pprof/debug handlers
 	// when PprofAuthEnabled is false.
-	if h.Config.AuthEnabled && h.Config.PprofEnabled && h.Config.PprofAuthEnabled {
+	if r.ProtoMajor == 2 && strings.Contains(r.Header.Get("Content-Type"), "application/grpc") {
+		h.GRPCServer.ServeHTTP(w, r)
+	} else if h.Config.AuthEnabled && h.Config.PprofEnabled && h.Config.PprofAuthEnabled {
 		h.mux.ServeHTTP(w, r)
 	} else if strings.HasPrefix(r.URL.Path, "/debug/pprof") && h.Config.PprofEnabled {
 		h.handleProfiles(w, r)

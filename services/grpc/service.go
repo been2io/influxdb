@@ -1,6 +1,7 @@
 package grpc
 
 import (
+	"google.golang.org/grpc"
 	"net"
 )
 
@@ -10,11 +11,10 @@ type Service struct {
 	Controller controller
 }
 
-func (s *Service) Open() error {
+func (s *Service) Open() *grpc.Server {
 	server := server{
 		controller: s.Controller,
 		store:      s.Store,
 	}
-	server.Serve(s.Listener)
-	return nil
+	return server.Serve(s.Listener)
 }

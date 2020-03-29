@@ -118,12 +118,12 @@ func (s *server) ExecSpec(r *datatypes.SpecRequest, stream datatypes.Storage_Exe
 				}
 				for i, c := range reader.Cols() {
 					label := c.Label
-					if !hasTime{
+					if !hasTime {
 						if label == "_start" {
 							label = "_time"
 						}
 					}
-					if label == execute.DefaultStartColLabel || label == execute.DefaultStopColLabel{
+					if label == execute.DefaultStartColLabel || label == execute.DefaultStopColLabel {
 						continue
 					}
 					response.ColumnMeta = append(response.ColumnMeta, &datatypes.TableResponse_ColMeta{
@@ -228,13 +228,14 @@ func (*server) TagValues(*datatypes.TagValuesRequest, datatypes.Storage_TagValue
 	panic("implement me")
 }
 
-func (s *server) Serve(ln net.Listener) {
+func (s *server) Serve(ln net.Listener) *grpc.Server {
 	grpcServer := grpc.NewServer()
 	datatypes.RegisterStorageServer(grpcServer, s)
-	go func() {
+	return grpcServer
+	/*go func() {
 		log.Printf("start grpc on addr %v", ln.Addr())
 		if err := grpcServer.Serve(ln); err != nil {
 			log.Fatalf("failed to serve: %v", err)
 		}
-	}()
+	}()*/
 }
