@@ -5,8 +5,8 @@ import (
 	"github.com/influxdata/flux"
 	"github.com/influxdata/flux/execute"
 	"github.com/influxdata/flux/execute/executetest"
-	"github.com/influxdata/flux/stdlib/influxdata/influxdb"
 	"github.com/influxdata/flux/stdlib/universe"
+	"github.com/influxdata/influxdb/flux/stdlib/influxdata/influxdb"
 	"log"
 	"net"
 	"testing"
@@ -68,7 +68,12 @@ func TestReader(t *testing.T) {
 		panic(err)
 	}
 	reader := Reader{
-		Addr: [][]string{[]string{lis.Addr().String()}},
+		NodeReaders: []*NodeReader{&NodeReader{
+			Addr: []string{lis.Addr().String()},
+			DB:   "telegraf",
+			RP:   "test",
+		},
+		},
 	}
 	expQ := flux.Spec{
 		Operations: []*flux.Operation{
@@ -147,7 +152,12 @@ func TestReadNoData(t *testing.T) {
 		panic(err)
 	}
 	reader := Reader{
-		Addr: [][]string{[]string{lis.Addr().String()}},
+		NodeReaders: []*NodeReader{&NodeReader{
+			Addr: []string{lis.Addr().String()},
+			DB:   "telegraf",
+			RP:   "",
+		},
+		},
 	}
 	expQ := flux.Spec{
 		Operations: []*flux.Operation{

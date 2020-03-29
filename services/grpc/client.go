@@ -24,13 +24,13 @@ type result struct {
 	reader flux.ColReader
 	err    error
 }
-type clientReader struct {
+type tableReader struct {
 	client datatypes.Storage_ExecSpecClient
 	f      func(r flux.ColReader) error
 	closed chan struct{}
 }
 
-func (r *clientReader) handleRead(ctx context.Context) error {
+func (r *tableReader) handleRead(ctx context.Context) error {
 	client := r.client
 	resp, err := client.Recv()
 	if err == io.EOF {
@@ -117,7 +117,7 @@ func (r *clientReader) handleRead(ctx context.Context) error {
 	}
 	return r.f(tb)
 }
-func (r *clientReader) handleReads(ctx context.Context) error {
+func (r *tableReader) handleReads(ctx context.Context) error {
 	for {
 		select {
 		case <-ctx.Done():
@@ -151,7 +151,7 @@ func (c *Client) Read(ctx context.Context, spec flux.Spec, f func(r flux.ColRead
 	if err != nil {
 		return err
 	}
-	r := clientReader{
+	r := tableReader{
 		client: client,
 		f:      f,
 		closed: make(chan struct{}),
