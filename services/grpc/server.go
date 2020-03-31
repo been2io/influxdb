@@ -61,6 +61,10 @@ func (s *server) ExecSpec(r *datatypes.SpecRequest, stream datatypes.Storage_Exe
 				var groupKeyMeta []*datatypes.TableResponse_ColMeta
 				var values []*datatypes.TableResponse_Value
 				for i, c := range groupKey.Cols() {
+					label := c.Label
+					if label == execute.DefaultStartColLabel || label == execute.DefaultStopColLabel {
+						continue
+					}
 					groupKeyMeta = append(groupKeyMeta, &datatypes.TableResponse_ColMeta{
 						Label: c.Label,
 						Type:  int32(c.Type),
