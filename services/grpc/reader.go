@@ -59,7 +59,7 @@ func (r *Reader) read(ctx context.Context, handler StageSourceHandler, spec flux
 	for _, client := range r.NodeReaders {
 		wg.Add(1)
 		go func(c *NodeReader) {
-			err := client.Read(ctx, spec, tables.Add)
+			err := c.Read(ctx, spec, tables.Add)
 			if err != nil {
 				cancel()
 				handler.Finish(err)
