@@ -214,6 +214,9 @@ func (b *exprIteratorBuilder) buildCallIterator(ctx context.Context, expr *influ
 	opt := b.opt
 	// Eliminate limits and offsets if they were previously set. These are handled by the caller.
 	opt.Limit, opt.Offset = 0, 0
+	if strings.HasPrefix(expr.Name, "#") {
+		return b.callIterator(ctx, expr, opt)
+	}
 	switch expr.Name {
 	case "distinct":
 		opt.Ordered = true
@@ -431,7 +434,7 @@ func (b *exprIteratorBuilder) buildCallIterator(ctx context.Context, expr *influ
 			builder.writeMode = false
 
 			//ref := expr.Args[0].(*influxql.VarRef)
-			i, err := b.callIterator(ctx, expr,opt)
+			i, err := b.callIterator(ctx, expr, opt)
 			if err != nil {
 				return nil, err
 			}
@@ -541,7 +544,7 @@ func (b *exprIteratorBuilder) buildCallIterator(ctx context.Context, expr *influ
 		case "percentile":
 			opt.Ordered = true
 			//input, err := buildExprIterator(ctx, expr.Args[0].(*influxql.VarRef), b.ic, b.sources, opt, false, false)
-			input, err := b.callIterator(ctx, expr,opt)
+			input, err := b.callIterator(ctx, expr, opt)
 			if err != nil {
 				return nil, err
 			}
@@ -760,7 +763,7 @@ func buildCursor(ctx context.Context, stmt *influxql.SelectStatement, ic Iterato
 	return newMultiScannerCursor(scanners, fields, opt), nil
 }
 func BuildAuxIterator(ctx context.Context, ic IteratorCreator, sources influxql.Sources, opt IteratorOptions) (Iterator, error) {
-	return buildAuxIterator(ctx,ic,sources,opt)
+	return buildAuxIterator(ctx, ic, sources, opt)
 }
 func buildAuxIterator(ctx context.Context, ic IteratorCreator, sources influxql.Sources, opt IteratorOptions) (Iterator, error) {
 	span := tracing.SpanFromContext(ctx)

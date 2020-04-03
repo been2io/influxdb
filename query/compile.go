@@ -277,7 +277,7 @@ func (c *compiledField) compileExpr(expr influxql.Expr) error {
 			return c.compileTopBottom(expr)
 		case "derivative", "non_negative_derivative":
 			isNonNegative := expr.Name == "non_negative_derivative"
-			return c.compileDerivative(expr.Args, isNonNegative)
+			return c.compileDerivative(expr, expr.Args, isNonNegative)
 		case "difference", "non_negative_difference":
 			isNonNegative := expr.Name == "non_negative_difference"
 			return c.compileDifference(expr.Args, isNonNegative)
@@ -434,7 +434,7 @@ func (c *compiledField) compileSample(args []influxql.Expr) error {
 	return c.compileSymbol("sample", args[0])
 }
 
-func (c *compiledField) compileDerivative(args []influxql.Expr, isNonNegative bool) error {
+func (c *compiledField) compileDerivative(expr *influxql.Call, args []influxql.Expr, isNonNegative bool) error {
 	name := "derivative"
 	if isNonNegative {
 		name = "non_negative_derivative"
@@ -469,6 +469,9 @@ func (c *compiledField) compileDerivative(args []influxql.Expr, isNonNegative bo
 		return c.compileNestedExpr(arg0)
 	default:
 		if !c.global.Interval.IsZero() && !c.global.InheritedInterval {
+			expr.Name = fmt.Sprintf("#sum|%v", name)
+			expr.Args[0] = &influxql.Call{Name: "last", Args: []influxql.Expr{arg0}}
+			return c.compileNestedExpr(expr.Args[0])
 			return fmt.Errorf("aggregate function required inside the call to %s", name)
 		}
 		return c.compileSymbol(name, arg0)
