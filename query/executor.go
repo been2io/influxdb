@@ -4,6 +4,7 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"log"
 	"os"
 	"runtime/debug"
 	"strconv"
@@ -442,6 +443,12 @@ func (q *Task) setError(err error) {
 }
 
 func (q *Task) monitor(fn MonitorFunc) {
+	defer func() {
+		if err := recover(); err != nil {
+			log.Printf("executor.go : task monitor err:%v", err)
+		}
+
+	}()
 	if err := fn(q.closing); err != nil {
 		select {
 		case <-q.closing:
