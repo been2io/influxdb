@@ -67,8 +67,10 @@ func (r *Reader) read(ctx context.Context, handler StageSourceHandler, spec flux
 			wg.Done()
 		}(client)
 	}
-	wg.Wait()
-	tables.Done()
+	go func() {
+		wg.Wait()
+		tables.Done()
+	}()
 	return nil
 }
 func (r *Reader) Read(ctx context.Context, spec flux.Spec) (flux.TableIterator, error) {

@@ -130,9 +130,10 @@ func (s *server) ExecSpec(r *datatypes.SpecRequest, stream datatypes.Storage_Exe
 					if label == execute.DefaultStartColLabel || label == execute.DefaultStopColLabel {
 						continue
 					}
+					/*
 					if label != execute.DefaultValueColLabel && label != "_time" {
 						continue
-					}
+					}*/
 					response.ColumnMeta = append(response.ColumnMeta, &datatypes.TableResponse_ColMeta{
 						Label: label,
 						Type:  int32(c.Type),

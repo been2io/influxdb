@@ -27,7 +27,7 @@ require (
 	github.com/googleapis/gax-go v1.0.3 // indirect
 	github.com/goreleaser/archive v1.1.3 // indirect
 	github.com/goreleaser/goreleaser v0.94.0 // indirect
-	github.com/influxdata/flux v0.58.4
+	github.com/influxdata/flux v0.65.0
 	github.com/influxdata/influxql v1.0.1
 	github.com/influxdata/line-protocol v0.0.0-20190220025226-a3afd890113f // indirect
 	github.com/influxdata/roaring v0.0.0-20180809181101-fc520f41fab6
