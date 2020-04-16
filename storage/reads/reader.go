@@ -269,7 +269,6 @@ func (gi *groupIterator) Do(f func(flux.Table) error) error {
 	}
 	return gi.handleRead(filterDuplicateTables(f), rs)
 }
-
 func (gi *groupIterator) handleRead(f func(flux.Table) error, rs GroupResultSet) error {
 	// these resources must be closed if not nil on return
 	var (
@@ -310,22 +309,25 @@ READ:
 		bnds := gi.spec.Bounds
 		key := groupKeyForGroup(gc.PartitionKeyVals(), &gi.spec, bnds)
 		done := make(chan struct{})
+		var tags models.Tags
+		//gc.Tags()
+		//tags := gc.Tags()
 		switch typedCur := cur.(type) {
 		case cursors.IntegerArrayCursor:
 			cols, defs := determineTableColsForGroup(gc.Keys(), flux.TInt)
-			table = newIntegerGroupTable(done, gc, typedCur, bnds, key, cols, gc.Tags(), defs, gi.alloc)
+			table = newIntegerGroupTable(done, gc, typedCur, bnds, key, cols,tags, defs, gi.alloc)
 		case cursors.FloatArrayCursor:
 			cols, defs := determineTableColsForGroup(gc.Keys(), flux.TFloat)
-			table = newFloatGroupTable(done, gc, typedCur, bnds, key, cols, gc.Tags(), defs, gi.alloc)
+			table = newFloatGroupTable(done, gc, typedCur, bnds, key, cols, tags, defs, gi.alloc)
 		case cursors.UnsignedArrayCursor:
 			cols, defs := determineTableColsForGroup(gc.Keys(), flux.TUInt)
-			table = newUnsignedGroupTable(done, gc, typedCur, bnds, key, cols, gc.Tags(), defs, gi.alloc)
+			table = newUnsignedGroupTable(done, gc, typedCur, bnds, key, cols, tags, defs, gi.alloc)
 		case cursors.BooleanArrayCursor:
 			cols, defs := determineTableColsForGroup(gc.Keys(), flux.TBool)
-			table = newBooleanGroupTable(done, gc, typedCur, bnds, key, cols, gc.Tags(), defs, gi.alloc)
+			table = newBooleanGroupTable(done, gc, typedCur, bnds, key, cols, tags, defs, gi.alloc)
 		case cursors.StringArrayCursor:
 			cols, defs := determineTableColsForGroup(gc.Keys(), flux.TString)
-			table = newStringGroupTable(done, gc, typedCur, bnds, key, cols, gc.Tags(), defs, gi.alloc)
+			table = newStringGroupTable(done, gc, typedCur, bnds, key, cols, tags, defs, gi.alloc)
 		default:
 			panic(fmt.Sprintf("unreachable: %T", typedCur))
 		}
@@ -438,7 +440,8 @@ func defaultGroupKeyForSeries(tags models.Tags, bnds execute.Bounds) flux.GroupK
 }
 
 func determineTableColsForGroup(tagKeys [][]byte, typ flux.ColType) ([]flux.ColMeta, [][]byte) {
-	cols := make([]flux.ColMeta, 4+len(tagKeys))
+	//cols := make([]flux.ColMeta, 4+len(tagKeys))
+	cols := make([]flux.ColMeta, 4)
 	defs := make([][]byte, 4+len(tagKeys))
 	cols[startColIdx] = flux.ColMeta{
 		Label: execute.DefaultStartColLabel,
@@ -456,14 +459,15 @@ func determineTableColsForGroup(tagKeys [][]byte, typ flux.ColType) ([]flux.ColM
 		Label: execute.DefaultValueColLabel,
 		Type:  typ,
 	}
-	for j, tag := range tagKeys {
-		cols[4+j] = flux.ColMeta{
-			Label: string(tag),
-			Type:  flux.TString,
-		}
-		defs[4+j] = []byte("")
+	/*
+		for j, tag := range tagKeys {
+			cols[4+j] = flux.ColMeta{
+				Label: string(tag),
+				Type:  flux.TString,
+			}
+			defs[4+j] = []byte("")
 
-	}
+		}*/
 	return cols, defs
 }
 

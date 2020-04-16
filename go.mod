@@ -57,6 +57,8 @@ require (
 	github.com/shurcooL/sanitized_anchor_name v1.0.0 // indirect
 	github.com/spf13/cast v1.3.0
 	github.com/tinylib/msgp v1.0.2
+	github.com/uber/jaeger-client-go v2.22.1+incompatible
+	github.com/uber/jaeger-lib v2.2.0+incompatible // indirect
 	github.com/willf/bitset v1.1.3 // indirect
 	github.com/xlab/treeprint v0.0.0-20180616005107-d6fb6747feb6
 	go.opencensus.io v0.22.1 // indirect

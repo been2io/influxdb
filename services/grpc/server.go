@@ -247,3 +247,57 @@ func (s *server) Serve(ln net.Listener) *grpc.Server {
 		}
 	}()*/
 }
+
+func marshalGroupKey(groupKey flux.GroupKey) ([]*datatypes.TableResponse_ColMeta, []*datatypes.TableResponse_Value) {
+	var groupKeyMeta []*datatypes.TableResponse_ColMeta
+	var values []*datatypes.TableResponse_Value
+	for i, c := range groupKey.Cols() {
+		/*label := c.Label
+		if label == execute.DefaultStartColLabel || label == execute.DefaultStopColLabel {
+			continue
+		}*/
+		groupKeyMeta = append(groupKeyMeta, &datatypes.TableResponse_ColMeta{
+			Label: c.Label,
+			Type:  int32(c.Type),
+		})
+
+		v := groupKey.Value(i)
+		nature := v.Type().(semantic.Nature)
+		tNature := int32(nature)
+		switch c.Type {
+		case flux.TTime:
+			values = append(values, &datatypes.TableResponse_Value{
+				Str:    v.Time().String(),
+				Nature: int32(nature),
+			})
+		case flux.TString:
+			values = append(values, &datatypes.TableResponse_Value{
+				Str:    v.Str(),
+				Nature: tNature,
+			})
+		case flux.TFloat:
+			values = append(values, &datatypes.TableResponse_Value{
+				Str:    fmt.Sprintf("%f", v.Float()),
+				Nature: tNature,
+			})
+		case flux.TInt:
+			values = append(values, &datatypes.TableResponse_Value{
+				Str:    fmt.Sprintf("%v", v.Int()),
+				Nature: tNature,
+			})
+		case flux.TUInt:
+			values = append(values, &datatypes.TableResponse_Value{
+				Str:    fmt.Sprintf("%v", v.UInt()),
+				Nature: tNature,
+			})
+		case flux.TBool:
+			values = append(values, &datatypes.TableResponse_Value{
+				Str:    fmt.Sprintf("%v", v.Bool()),
+				Nature: tNature,
+			})
+
+		}
+
+	}
+	return groupKeyMeta, values
+}

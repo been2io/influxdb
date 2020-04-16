@@ -183,7 +183,7 @@ func (t *table) readTags(tags models.Tags) {
 	if len(tags) == 0 {
 		return
 	}
-
+	return
 	for _, tag := range tags {
 		j := execute.ColIdx(string(tag.Key), t.cols)
 		t.tags[j] = tag.Value
