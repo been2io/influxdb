@@ -168,21 +168,23 @@ READ:
 		bnds := fi.spec.Bounds
 		key := defaultGroupKeyForSeries(rs.Tags(), bnds)
 		done := make(chan struct{})
+		var tags models.Tags
+		//tags = rs.Tags()
 		switch typedCur := cur.(type) {
 		case cursors.IntegerArrayCursor:
-			cols, defs := determineTableColsForSeries(rs.Tags(), flux.TInt)
+			cols, defs := determineTableColsForSeries(tags, flux.TInt)
 			table = newIntegerTable(done, typedCur, bnds, key, cols, rs.Tags(), defs, fi.alloc)
 		case cursors.FloatArrayCursor:
-			cols, defs := determineTableColsForSeries(rs.Tags(), flux.TFloat)
+			cols, defs := determineTableColsForSeries(tags, flux.TFloat)
 			table = newFloatTable(done, typedCur, bnds, key, cols, rs.Tags(), defs, fi.alloc)
 		case cursors.UnsignedArrayCursor:
-			cols, defs := determineTableColsForSeries(rs.Tags(), flux.TUInt)
+			cols, defs := determineTableColsForSeries(tags, flux.TUInt)
 			table = newUnsignedTable(done, typedCur, bnds, key, cols, rs.Tags(), defs, fi.alloc)
 		case cursors.BooleanArrayCursor:
-			cols, defs := determineTableColsForSeries(rs.Tags(), flux.TBool)
+			cols, defs := determineTableColsForSeries(tags, flux.TBool)
 			table = newBooleanTable(done, typedCur, bnds, key, cols, rs.Tags(), defs, fi.alloc)
 		case cursors.StringArrayCursor:
-			cols, defs := determineTableColsForSeries(rs.Tags(), flux.TString)
+			cols, defs := determineTableColsForSeries(tags, flux.TString)
 			table = newStringTable(done, typedCur, bnds, key, cols, rs.Tags(), defs, fi.alloc)
 		default:
 			panic(fmt.Sprintf("unreachable: %T", typedCur))
@@ -315,7 +317,7 @@ READ:
 		switch typedCur := cur.(type) {
 		case cursors.IntegerArrayCursor:
 			cols, defs := determineTableColsForGroup(gc.Keys(), flux.TInt)
-			table = newIntegerGroupTable(done, gc, typedCur, bnds, key, cols,tags, defs, gi.alloc)
+			table = newIntegerGroupTable(done, gc, typedCur, bnds, key, cols, tags, defs, gi.alloc)
 		case cursors.FloatArrayCursor:
 			cols, defs := determineTableColsForGroup(gc.Keys(), flux.TFloat)
 			table = newFloatGroupTable(done, gc, typedCur, bnds, key, cols, tags, defs, gi.alloc)
@@ -406,6 +408,7 @@ func determineTableColsForSeries(tags models.Tags, typ flux.ColType) ([]flux.Col
 		Label: execute.DefaultValueColLabel,
 		Type:  typ,
 	}
+	return cols, defs
 	for j, tag := range tags {
 		cols[4+j] = flux.ColMeta{
 			Label: string(tag.Key),

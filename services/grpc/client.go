@@ -105,7 +105,7 @@ func (r *tableReader) handleRead(ctx context.Context) error {
 	if timeIdx == -1 {
 		startIdx := execute.ColIdx("_start", colMeta)
 		if startIdx == -1 {
-			panic(errors.New("_time and _start column required"))
+			return errors.New("_time and _start column required")
 		}
 		colMeta = append(colMeta, flux.ColMeta{Type: flux.TTime, Label: "_time"})
 		values = append(values, values[startIdx])
