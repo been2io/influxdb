@@ -2,7 +2,6 @@ package run
 
 import (
 	"fmt"
-	"github.com/influxdata/flux"
 	"github.com/opentracing/opentracing-go"
 	config "github.com/uber/jaeger-client-go/config"
 	"io"
@@ -10,9 +9,12 @@ import (
 )
 
 func init() {
-	flux.EnableExperimentalTracing()
-	tracer, _ := initJaeger("flux")
-	opentracing.SetGlobalTracer(tracer)
+	/*
+		flux.EnableExperimentalTracing()
+		tracer, _ := initJaeger("flux")
+		opentracing.SetGlobalTracer(tracer)
+	*/
+
 }
 func initJaeger(service string) (opentracing.Tracer, io.Closer) {
 	cfg := &config.Configuration{

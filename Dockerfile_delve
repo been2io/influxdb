@@ -1,0 +1,4 @@
+FROM hub.byted.org/alarm/golang:1.12.14
+RUN go get github.com/go-delve/delve/cmd/dlv
+RUN cp -r /go/bin/* /usr/bin/
+

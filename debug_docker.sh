@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-v=flux0.7.2
+v=debug0.6.9.3
 img=hub.byted.org/alarm/influxdb:$v
-docker build -t $img .
+docker build -f Dockerfile_debug -t $img .
 docker push $img
