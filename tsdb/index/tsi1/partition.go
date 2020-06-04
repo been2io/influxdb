@@ -626,7 +626,11 @@ func (p *Partition) DropMeasurement(name []byte) error {
 			} else if elem.SeriesID == 0 {
 				break
 			}
-			if err := p.activeLogFile.DeleteSeriesID(elem.SeriesID); err != nil {
+			if err := func() error {
+				p.mu.RLock()
+				defer p.mu.RUnlock()
+				return p.activeLogFile.DeleteSeriesID(elem.SeriesID)
+			}(); err != nil {
 				return err
 			}
 		}
@@ -687,7 +691,11 @@ func (p *Partition) createSeriesListIfNotExists(names [][]byte, tagsSlice []mode
 
 func (p *Partition) DropSeries(seriesID uint64) error {
 	// Delete series from index.
-	if err := p.activeLogFile.DeleteSeriesID(seriesID); err != nil {
+	if err := func() error {
+		p.mu.RLock()
+		defer p.mu.RUnlock()
+		return p.activeLogFile.DeleteSeriesID(seriesID)
+	}(); err != nil {
 		return err
 	}
 
@@ -770,18 +778,21 @@ func (p *Partition) TagValueIterator(name, key []byte) tsdb.TagValueIterator {
 }
 
 // TagKeySeriesIDIterator returns a series iterator for all values across a single key.
-func (p *Partition) TagKeySeriesIDIterator(name, key []byte) tsdb.SeriesIDIterator {
+func (p *Partition) TagKeySeriesIDIterator(name, key []byte) (tsdb.SeriesIDIterator, error) {
 	fs, err := p.RetainFileSet()
 	if err != nil {
-		return nil // TODO(edd): this should probably return an error.
+		return nil, err
 	}
 
-	itr := fs.TagKeySeriesIDIterator(name, key)
-	if itr == nil {
+	itr, err := fs.TagKeySeriesIDIterator(name, key)
+	if err != nil {
 		fs.Release()
-		return nil
+		return nil, err
+	} else if itr == nil {
+		fs.Release()
+		return nil, nil
 	}
-	return newFileSetSeriesIDIterator(fs, itr)
+	return newFileSetSeriesIDIterator(fs, itr), nil
 }
 
 // TagValueSeriesIDIterator returns a series iterator for a single key value.
@@ -793,6 +804,7 @@ func (p *Partition) TagValueSeriesIDIterator(name, key, value []byte) (tsdb.Seri
 
 	itr, err := fs.TagValueSeriesIDIterator(name, key, value)
 	if err != nil {
+		fs.Release()
 		return nil, err
 	} else if itr == nil {
 		fs.Release()

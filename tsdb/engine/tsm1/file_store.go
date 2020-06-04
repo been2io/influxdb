@@ -542,6 +542,7 @@ func (f *FileStore) Open() error {
 			// the file, and continue loading the shard without it.
 			if err != nil {
 				f.logger.Error("Cannot read corrupt tsm file, renaming", zap.String("path", file.Name()), zap.Int("id", idx), zap.Error(err))
+				file.Close()
 				if e := os.Rename(file.Name(), file.Name()+"."+BadTSMFileExtension); e != nil {
 					f.logger.Error("Cannot rename corrupt tsm file", zap.String("path", file.Name()), zap.Int("id", idx), zap.Error(e))
 					readerC <- &res{r: df, err: fmt.Errorf("cannot rename corrupt file %s: %v", file.Name(), e)}
@@ -923,7 +924,9 @@ func (f *FileStore) BlockCount(path string, idx int) int {
 				}
 			}
 			_, _, _, _, _, block, _ := iter.Read()
-			return BlockCount(block)
+			// on Error, BlockCount(block) returns 0 for cnt
+			cnt, _ := BlockCount(block)
+			return cnt
 		}
 	}
 	return 0

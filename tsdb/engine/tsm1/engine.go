@@ -196,6 +196,9 @@ type Engine struct {
 
 	// seriesTypeMap maps a series key to field type
 	seriesTypeMap *radix.Tree
+
+	// muDigest ensures only one goroutine can generate a digest at a time.
+	muDigest sync.RWMutex
 }
 
 // NewEngine returns a new instance of Engine.
@@ -283,6 +286,9 @@ func (e *Engine) WithParseFileNameFunc(parseFileNameFunc ParseFileNameFunc) {
 
 // Digest returns a reader for the shard's digest.
 func (e *Engine) Digest() (io.ReadCloser, int64, error) {
+	e.muDigest.Lock()
+	defer e.muDigest.Unlock()
+
 	log, logEnd := logger.NewOperation(e.logger, "Engine digest", "tsm1_digest")
 	defer logEnd()
 
@@ -1974,7 +1980,7 @@ func (e *Engine) compact(wg *sync.WaitGroup) {
 			level1Groups := e.CompactionPlan.PlanLevel(1)
 			level2Groups := e.CompactionPlan.PlanLevel(2)
 			level3Groups := e.CompactionPlan.PlanLevel(3)
-			level4Groups := e.CompactionPlan.Plan(e.FileStore.LastModified())
+			level4Groups := e.CompactionPlan.Plan(e.LastModified())
 			atomic.StoreInt64(&e.stats.TSMOptimizeCompactionsQueue, int64(len(level4Groups)))
 
 			// If no full compactions are need, see if an optimize is needed
@@ -2164,6 +2170,18 @@ func (s *compactionStrategy) compactGroup() {
 		}
 
 		log.Info("Error compacting TSM files", zap.Error(err))
+
+		// We hit a bad TSM file - rename so the next compaction can proceed.
+		if _, ok := err.(errBlockRead); ok {
+			path := err.(errBlockRead).file
+			log.Info("Renaming a corrupt TSM file due to compaction error", zap.Error(err))
+			if err := s.fileStore.ReplaceWithCallback([]string{path}, nil, nil); err != nil {
+				log.Info("Error removing bad TSM file", zap.Error(err))
+			} else if e := os.Rename(path, path+"."+BadTSMFileExtension); e != nil {
+				log.Info("Error renaming corrupt TSM file", zap.Error((err)))
+			}
+		}
+
 		atomic.AddInt64(s.errorStat, 1)
 		time.Sleep(time.Second)
 		return

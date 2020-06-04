@@ -1,4 +1,20 @@
-v1.7.9 [unreleased]
+v1.7.11 [unreleased]
+--------------------
+
+v1.7.10 [2020-02-07]
+--------------------
+
+### Bugfixes
+
+-	[#15609](https://github.com/influxdata/influxdb/pull/15609): fix(storage): Renaming corrupt data files fails.
+-	[#15881](https://github.com/influxdata/influxdb/pull/15881): fix(tsm1): make digest safe for concurrent use.
+-	[#15863](https://github.com/influxdata/influxdb/pull/15863): fix(tsi1): index defect with negated equality filters.
+-	[#15970](https://github.com/influxdata/influxdb/pull/15970): Fix compaction logic on infrequent cache snapshots.
+-	[#16607](https://github.com/influxdata/influxdb/pull/16607): fix(storage): ensure all block data returned.
+-	[#16714](https://github.com/influxdata/influxdb/pull/16714): feat(storage): Offline series file compaction.
+-	[#16621](https://github.com/influxdata/influxdb/pull/16221): fix(storage): skip TSM files with block read errors.
+
+v1.7.9 [2019-10-27]
 -------------------
 
 ### Bugfixes
@@ -7,10 +23,13 @@ v1.7.9 [unreleased]
 -	[#15182](https://github.com/influxdata/influxdb/pull/15182): fix(tsi1): replace TSI compaction wait group with counter.
 -	[#15254](https://github.com/influxdata/influxdb/pull/15254): chore(influxdb): Update InfluxQL dependency.
 -	[#15257](https://github.com/influxdata/influxdb/pull/15257): feat(httpd): Add option to authenticate debug/pprof and ping endpoints.
+-	[#15386](https://github.com/influxdata/influxdb/pull/15386): fix(http): honor insecure-skip-very even if custom tls config is specified.
 
 ### Features
 
 -	[#15341](https://github.com/influxdata/influxdb/pull/15341): Update golang version to 1.12.10
+-	[#15397](https://github.com/influxdata/influxdb/pull/15397): chore(build): remove Godeps file.
+-	[#15524](https://github.com/influxdata/influxdb/pull/15524): Update flux version to v0.50.2
 
 v1.7.8 [2019-08-20]
 -------------------
