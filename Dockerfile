@@ -1,4 +1,4 @@
-FROM hub.byted.org/alarm/golang:1.12.14 as builder
+FROM hub.byted.org/alarm/golang:1.13.12 as builder
 WORKDIR /go/src/github.com/influxdata/influxdb
 #COPY Gopkg.toml Gopkg.lock ./
 #RUN dep ensure -vendor-only
