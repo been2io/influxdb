@@ -173,19 +173,19 @@ READ:
 		switch typedCur := cur.(type) {
 		case cursors.IntegerArrayCursor:
 			cols, defs := determineTableColsForSeries(tags, flux.TInt)
-			table = newIntegerTable(done, typedCur, bnds, key, cols, rs.Tags(), defs, fi.alloc)
+			table = newIntegerTable(done, typedCur, bnds, key, cols, tags, defs, fi.alloc)
 		case cursors.FloatArrayCursor:
 			cols, defs := determineTableColsForSeries(tags, flux.TFloat)
-			table = newFloatTable(done, typedCur, bnds, key, cols, rs.Tags(), defs, fi.alloc)
+			table = newFloatTable(done, typedCur, bnds, key, cols, tags, defs, fi.alloc)
 		case cursors.UnsignedArrayCursor:
 			cols, defs := determineTableColsForSeries(tags, flux.TUInt)
-			table = newUnsignedTable(done, typedCur, bnds, key, cols, rs.Tags(), defs, fi.alloc)
+			table = newUnsignedTable(done, typedCur, bnds, key, cols, tags, defs, fi.alloc)
 		case cursors.BooleanArrayCursor:
 			cols, defs := determineTableColsForSeries(tags, flux.TBool)
-			table = newBooleanTable(done, typedCur, bnds, key, cols, rs.Tags(), defs, fi.alloc)
+			table = newBooleanTable(done, typedCur, bnds, key, cols, tags, defs, fi.alloc)
 		case cursors.StringArrayCursor:
 			cols, defs := determineTableColsForSeries(tags, flux.TString)
-			table = newStringTable(done, typedCur, bnds, key, cols, rs.Tags(), defs, fi.alloc)
+			table = newStringTable(done, typedCur, bnds, key, cols, tags, defs, fi.alloc)
 		default:
 			panic(fmt.Sprintf("unreachable: %T", typedCur))
 		}
