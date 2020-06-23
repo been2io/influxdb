@@ -83,9 +83,8 @@ func (bd *BucketsDecoder) Decode(ctx context.Context) (flux.Table, error) {
 				_ = b.AppendString(0, db.Name+"/"+rp.Name)
 				_ = b.AppendString(1, "")
 				_ = b.AppendString(2, "influxdb")
-				_ = b.AppendString(3, "")
-				_ = b.AppendString(4, rp.Name)
-				_ = b.AppendInt(5, rp.Duration.Nanoseconds())
+				_ = b.AppendString(3, rp.Name)
+				_ = b.AppendInt(4, rp.Duration.Nanoseconds())
 			}
 		}
 	}
