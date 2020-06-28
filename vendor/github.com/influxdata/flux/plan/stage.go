@@ -182,7 +182,7 @@ func (sp StagePlanner) plan(spec *flux.Spec) (*flux.Spec, error) {
 		children: children,
 	}
 	for _, root := range roots {
-		if root.Spec.Kind() == StageKind {
+		if root.Spec.Kind() == StageKind || root.Spec.Kind() == "buckets"{
 			continue
 		}
 		stageSpec := &StageOperationSpec{
