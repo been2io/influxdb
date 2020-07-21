@@ -283,13 +283,14 @@ func NewHandler(c Config) *Handler {
 		"POST", "/api/v2/query", true, true, nil,
 	}
 
-	if !c.FluxEnabled {
+	/*if !c.FluxEnabled {
 		fluxRoute.HandlerFunc = func(w http.ResponseWriter, r *http.Request) {
 			http.Error(w, "Flux query service disabled. Verify flux-enabled=true in the [http] section of the InfluxDB config.", http.StatusForbidden)
 		}
 	} else {
 		fluxRoute.HandlerFunc = h.serveFluxQuery
-	}
+	}*/
+	fluxRoute.HandlerFunc = h.serveFluxQuery
 	h.AddRoutes(fluxRoute)
 
 	return h
