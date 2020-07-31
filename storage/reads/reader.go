@@ -4,6 +4,7 @@ import (
 	"context"
 	"fmt"
 	"strings"
+	"time"
 
 	"github.com/gogo/protobuf/types"
 	"github.com/influxdata/flux"
@@ -142,6 +143,9 @@ func (fi *filterIterator) Do(f func(flux.Table) error) error {
 
 func (fi *filterIterator) handleRead(f func(flux.Table) error, rs ResultSet) error {
 	// these resources must be closed if not nil on return
+	defer func(t time.Time){
+		fmt.Println("cost::::::::::::::::::::::",time.Now().Sub(t))
+	}(time.Now())
 	var (
 		cur   cursors.Cursor
 		table storageTable
@@ -273,6 +277,9 @@ func (gi *groupIterator) Do(f func(flux.Table) error) error {
 }
 func (gi *groupIterator) handleRead(f func(flux.Table) error, rs GroupResultSet) error {
 	// these resources must be closed if not nil on return
+	defer func(t time.Time){
+		fmt.Println("cost::::::::::::::::::::::",time.Now().Sub(t))
+	}(time.Now())
 	var (
 		gc    GroupCursor
 		cur   cursors.Cursor

@@ -55,7 +55,7 @@ func (s *server) ExecSpec(r *datatypes.SpecRequest, stream datatypes.Storage_Exe
 			return err
 		}
 		result := resultIterator.Next()
-		return result.Tables().Do(func(table flux.Table) error {
+		err := result.Tables().Do(func(table flux.Table) error {
 			return table.Do(func(reader flux.ColReader) error {
 				groupKey := reader.Key()
 				var groupKeyMeta []*datatypes.TableResponse_ColMeta
@@ -131,9 +131,9 @@ func (s *server) ExecSpec(r *datatypes.SpecRequest, stream datatypes.Storage_Exe
 						continue
 					}
 					/*
-					if label != execute.DefaultValueColLabel && label != "_time" {
-						continue
-					}*/
+						if label != execute.DefaultValueColLabel && label != "_time" {
+							continue
+						}*/
 					response.ColumnMeta = append(response.ColumnMeta, &datatypes.TableResponse_ColMeta{
 						Label: label,
 						Type:  int32(c.Type),
@@ -195,7 +195,9 @@ func (s *server) ExecSpec(r *datatypes.SpecRequest, stream datatypes.Storage_Exe
 				return stream.Send(&response)
 			})
 		})
-
+		if err != nil {
+			return err
+		}
 	}
 	return nil
 }

@@ -24,7 +24,7 @@ func (y *GeneratedYieldProcedureSpec) Kind() ProcedureKind {
 }
 
 func (y *GeneratedYieldProcedureSpec) Copy() ProcedureSpec {
-	return &GeneratedYieldProcedureSpec{Name: y.Name}
+	return &GeneratedYieldProcedureSpec{Name: y.Name+"_copy"}
 }
 
 func (y *GeneratedYieldProcedureSpec) YieldName() string {

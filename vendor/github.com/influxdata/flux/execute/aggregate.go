@@ -220,7 +220,7 @@ func AppendKeyTimeValues(key flux.GroupKey, builder TableBuilder) error {
 		return fmt.Errorf("group key column %s not found in key", "_start")
 	}
 	cIdx:=ColIdx(DefaultTimeColLabel,builder.Cols())
-	if idx < 0 {
+	if cIdx < 0 {
 		return fmt.Errorf("group key column %s not found in output table", "_time")
 	}
 	if err := builder.AppendValue(cIdx, key.Value(idx)); err != nil {

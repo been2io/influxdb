@@ -2098,14 +2098,19 @@ type tableBuilderCache struct {
 	alloc  *memory.Allocator
 
 	triggerSpec plan.TriggerSpec
+	builderFn   func(key flux.GroupKey, a *memory.Allocator) TableBuilder
 }
 
 func NewTableBuilderCache(a *memory.Allocator) *tableBuilderCache {
 	return &tableBuilderCache{
 		tables: NewGroupLookup(),
 		alloc:  a,
+		builderFn: func(key flux.GroupKey, a *memory.Allocator) TableBuilder {
+			return NewColListTableBuilder(key, a)
+		},
 	}
 }
+
 
 type tableState struct {
 	builder TableBuilder
@@ -2137,7 +2142,7 @@ func (d *tableBuilderCache) lookupState(key flux.GroupKey) (tableState, bool) {
 func (d *tableBuilderCache) TableBuilder(key flux.GroupKey) (TableBuilder, bool) {
 	b, ok := d.lookupState(key)
 	if !ok {
-		builder := NewColListTableBuilder(key, d.alloc)
+		builder := d.builderFn(key, d.alloc)
 		t := NewTriggerFromSpec(d.triggerSpec)
 		b = tableState{
 			builder: builder,

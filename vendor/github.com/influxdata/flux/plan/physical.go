@@ -44,7 +44,9 @@ func (pp *physicalPlanner) Plan(spec *Spec) (*Spec, error) {
 	if err != nil {
 		return nil, err
 	}
-
+	//concurrency plan
+	spec.Resources.ConcurrencyQuota = 4
+	newConcurrentPlanner(spec).Plan()
 	// Compute time bounds for nodes in the plan
 	if err := transformedSpec.BottomUpWalk(ComputeBounds); err != nil {
 		return nil, err
