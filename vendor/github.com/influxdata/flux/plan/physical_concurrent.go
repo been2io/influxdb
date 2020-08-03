@@ -26,8 +26,11 @@ func (p *ConcurrentPlanner) Plan() {
 }
 
 func (p *ConcurrentPlanner) makeConcurrent(node Node, concurrency int) error {
+	if node.Kind() == generatedYieldKind{
+		return nil
+	}
 	new := &PhysicalPlanNode{
-		id:   NodeID(fmt.Sprintf("cocurrent %v", p.index)),
+		id:   NodeID(fmt.Sprintf("concurrent %v", p.index)),
 		Spec: &ShardConcurrentSpec{},
 	}
 	p.index++
