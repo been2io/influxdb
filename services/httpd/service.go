@@ -187,8 +187,9 @@ func (s *Service) Open() error {
 	}
 	grpc := &grpc.Service{
 		Controller: s.Handler.Controller,
+		Store:      s.Handler.Store,
 	}
-	s.Handler.GRPCServer=grpc.Open()
+	s.Handler.GRPCServer = grpc.Open()
 	// Begin listening for requests in a separate goroutine.
 	go s.serveTCP()
 	go s.register()
@@ -220,7 +221,7 @@ func (s *Service) register() {
 						log.Println(err)
 					}
 
-					log.Printf("register to %v bad request :status %v,%v", url, response.StatusCode,string(b))
+					log.Printf("register to %v bad request :status %v,%v", url, response.StatusCode, string(b))
 
 				}
 			} else {
