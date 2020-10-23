@@ -89,6 +89,9 @@ func (w *ResponseWriter) WriteResultSet(rs ResultSet) error {
 }
 
 func (w *ResponseWriter) WriteGroupResultSet(rs GroupResultSet) error {
+	if rs == nil {
+		return nil
+	}
 	stats := cursors.CursorStats{}
 	gc := rs.Next()
 	for gc != nil {

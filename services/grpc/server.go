@@ -210,7 +210,6 @@ func (s *server) ReadFilter(r *datatypes.ReadFilterRequest, stream datatypes.Sto
 		return err
 	}
 	w := reads.NewResponseWriter(stream, datatypes.HintFlags(datatypes.HintNone))
-
 	err = w.WriteResultSet(rs)
 	w.Flush()
 	return err
@@ -224,6 +223,7 @@ func (s *server) ReadGroup(r *datatypes.ReadGroupRequest, stream datatypes.Stora
 	}
 	w := reads.NewResponseWriter(stream, datatypes.HintFlags(datatypes.HintNone))
 	err = w.WriteGroupResultSet(rs)
+	w.Flush()
 	return err
 }
 

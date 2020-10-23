@@ -7,20 +7,24 @@ import (
 	"github.com/gogo/protobuf/types"
 	"github.com/influxdata/flux/memory"
 	"github.com/influxdata/influxdb/flux/stdlib/influxdata/influxdb"
-	"github.com/influxdata/influxdb/services/storage"
 	"github.com/influxdata/influxdb/storage/reads/datatypes"
 	"github.com/influxdata/influxdb/tsdb/cursors"
 )
 
 type RemoteStore struct {
-	client   datatypes.StorageClient
-	source   *storage.ReadSource
-	sourcePB *types.Any
+	client datatypes.StorageClient
+	source *types.Any
 }
 
+func NewRemoteStore(client datatypes.StorageClient, source *types.Any) *RemoteStore {
+	return &RemoteStore{
+		client: client,
+		source: source,
+	}
+}
 func (r *RemoteStore) ReadFilter(ctx context.Context, req *datatypes.ReadFilterRequest) (ResultSet, error) {
 	clone := *req
-	clone.ReadSource = r.sourcePB
+	clone.ReadSource = r.source
 	resp, err := r.client.ReadFilter(ctx, &clone)
 	if err != nil {
 		return nil, err
@@ -28,9 +32,9 @@ func (r *RemoteStore) ReadFilter(ctx context.Context, req *datatypes.ReadFilterR
 	return NewResultSetStreamReader(resp), nil
 }
 
-func (r RemoteStore) ReadGroup(ctx context.Context, req *datatypes.ReadGroupRequest) (GroupResultSet, error) {
+func (r *RemoteStore) ReadGroup(ctx context.Context, req *datatypes.ReadGroupRequest) (GroupResultSet, error) {
 	clone := *req
-	clone.ReadSource = r.sourcePB
+	clone.ReadSource = r.source
 	resp, err := r.client.ReadGroup(ctx, &clone)
 	if err != nil {
 		return nil, err
@@ -38,16 +42,19 @@ func (r RemoteStore) ReadGroup(ctx context.Context, req *datatypes.ReadGroupRequ
 	return NewGroupResultSetStreamReader(resp), nil
 }
 
-func (r RemoteStore) TagKeys(ctx context.Context, req *datatypes.TagKeysRequest) (cursors.StringIterator, error) {
+func (r *RemoteStore) TagKeys(ctx context.Context, req *datatypes.TagKeysRequest) (cursors.StringIterator, error) {
 	panic("implement me")
 }
 
-func (r RemoteStore) TagValues(ctx context.Context, req *datatypes.TagValuesRequest) (cursors.StringIterator, error) {
+func (r *RemoteStore) TagValues(ctx context.Context, req *datatypes.TagValuesRequest) (cursors.StringIterator, error) {
 	panic("implement me")
 }
 
-func (r RemoteStore) GetSource(db, rp string) proto.Message {
-	panic("implement me")
+func (r *RemoteStore) GetSource(db, rp string) proto.Message {
+	return &ReadSource{
+		Database: db,
+		RetentionPolicy: rp,
+	}
 }
 
 type MergedRemoteStore struct {
@@ -92,9 +99,21 @@ func (r *MergedRemoteStore) TagKeys(ctx context.Context, req *datatypes.TagKeysR
 func (r *MergedRemoteStore) TagValues(ctx context.Context, req *datatypes.TagValuesRequest) (cursors.StringIterator, error) {
 	panic("implement me")
 }
+type ReadSource struct {
+	// Database identifies which database to query.
+	Database string `protobuf:"bytes,1,opt,name=database,proto3" json:"database,omitempty"`
+	// RetentionPolicy identifies which retention policy to query.
+	RetentionPolicy string `protobuf:"bytes,2,opt,name=retention_policy,json=retentionPolicy,proto3" json:"retention_policy,omitempty"`
+}
 
+func (m *ReadSource) Reset()                    { *m = ReadSource{} }
+func (m *ReadSource) String() string            { return proto.CompactTextString(m) }
+func (*ReadSource) ProtoMessage()               {}
 func (r *MergedRemoteStore) GetSource(db, rp string) proto.Message {
-	panic("implement me")
+	return &ReadSource{
+		Database: db,
+		RetentionPolicy: rp,
+	}
 }
 
 type RemoteReader struct {
