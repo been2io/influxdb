@@ -6,13 +6,11 @@ import (
 	"io"
 	"sort"
 	"strings"
-	"sync"
 	"time"
 
 	"github.com/influxdata/influxdb/pkg/tracing"
 	"github.com/influxdata/influxdb/query/internal/gota"
 	"github.com/influxdata/influxql"
-	"golang.org/x/sync/errgroup"
 )
 
 var DefaultTypeMapper = influxql.MultiTypeMapper(
@@ -216,6 +214,9 @@ func (b *exprIteratorBuilder) buildCallIterator(ctx context.Context, expr *influ
 	opt := b.opt
 	// Eliminate limits and offsets if they were previously set. These are handled by the caller.
 	opt.Limit, opt.Offset = 0, 0
+	if strings.HasPrefix(expr.Name, "#") {
+		return b.callIterator(ctx, expr, opt)
+	}
 	switch expr.Name {
 	case "distinct":
 		opt.Ordered = true
@@ -432,8 +433,8 @@ func (b *exprIteratorBuilder) buildCallIterator(ctx context.Context, expr *influ
 			builder.selector = true
 			builder.writeMode = false
 
-			ref := expr.Args[0].(*influxql.VarRef)
-			i, err := builder.buildVarRefIterator(ctx, ref)
+			//ref := expr.Args[0].(*influxql.VarRef)
+			i, err := b.callIterator(ctx, expr, opt)
 			if err != nil {
 				return nil, err
 			}
@@ -515,6 +516,7 @@ func (b *exprIteratorBuilder) buildCallIterator(ctx context.Context, expr *influ
 			return b.callIterator(ctx, expr, opt)
 		case "median":
 			opt.Ordered = true
+			opt.Expr = expr
 			input, err := buildExprIterator(ctx, expr.Args[0].(*influxql.VarRef), b.ic, b.sources, opt, false, false)
 			if err != nil {
 				return nil, err
@@ -541,7 +543,8 @@ func (b *exprIteratorBuilder) buildCallIterator(ctx context.Context, expr *influ
 			return newSpreadIterator(input, opt)
 		case "percentile":
 			opt.Ordered = true
-			input, err := buildExprIterator(ctx, expr.Args[0].(*influxql.VarRef), b.ic, b.sources, opt, false, false)
+			//input, err := buildExprIterator(ctx, expr.Args[0].(*influxql.VarRef), b.ic, b.sources, opt, false, false)
+			input, err := b.callIterator(ctx, expr, opt)
 			if err != nil {
 				return nil, err
 			}
@@ -728,44 +731,28 @@ func buildCursor(ctx context.Context, stmt *influxql.SelectStatement, ic Iterato
 
 	// Produce an iterator for every single call and create an iterator scanner
 	// associated with it.
-	var g errgroup.Group
-	var mu sync.Mutex
 	scanners := make([]IteratorScanner, 0, len(valueMapper.calls))
 	for call := range valueMapper.calls {
-		call := call
-
 		driver := valueMapper.table[call]
 		if driver.Type == influxql.Unknown {
 			// The primary driver of this call is of unknown type, so skip this.
 			continue
 		}
 
-		g.Go(func() error {
-			itr, err := buildFieldIterator(ctx, call, ic, stmt.Sources, opt, selector, stmt.Target != nil)
-			if err != nil {
-				return err
+		itr, err := buildFieldIterator(ctx, call, ic, stmt.Sources, opt, selector, stmt.Target != nil)
+		if err != nil {
+			for _, s := range scanners {
+				s.Close()
 			}
-
-			keys := make([]influxql.VarRef, 0, len(auxKeys)+1)
-			keys = append(keys, driver)
-			keys = append(keys, auxKeys...)
-
-			scanner := NewIteratorScanner(itr, keys, opt.FillValue)
-
-			mu.Lock()
-			scanners = append(scanners, scanner)
-			mu.Unlock()
-
-			return nil
-		})
-	}
-
-	// Close all scanners if any iterator fails.
-	if err := g.Wait(); err != nil {
-		for _, s := range scanners {
-			s.Close()
+			return nil, err
 		}
-		return nil, err
+
+		keys := make([]influxql.VarRef, 0, len(auxKeys)+1)
+		keys = append(keys, driver)
+		keys = append(keys, auxKeys...)
+
+		scanner := NewIteratorScanner(itr, keys, opt.FillValue)
+		scanners = append(scanners, scanner)
 	}
 
 	if len(scanners) == 0 {

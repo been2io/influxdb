@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"math"
 	"sort"
+	"strings"
 	"time"
 
 	"github.com/influxdata/influxdb/query/internal/gota"
@@ -38,6 +39,10 @@ function to allow it to be included during planning.
 // NewCallIterator returns a new iterator for a Call.
 func NewCallIterator(input Iterator, opt IteratorOptions) (Iterator, error) {
 	name := opt.Expr.(*influxql.Call).Name
+	if strings.HasPrefix(name, "#") {
+		name = name[1:strings.Index(name, "|")]
+	}
+
 	switch name {
 	case "count":
 		return newCountIterator(input, opt)
@@ -54,7 +59,7 @@ func NewCallIterator(input Iterator, opt IteratorOptions) (Iterator, error) {
 	case "mean":
 		return newMeanIterator(input, opt)
 	default:
-		return nil, fmt.Errorf("unsupported function call: %s", name)
+		return input, nil
 	}
 }
 
