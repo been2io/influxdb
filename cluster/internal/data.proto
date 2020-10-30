@@ -1,0 +1,57 @@
+syntax = "proto3";
+package internal;
+message WriteShardRequest {
+    uint64 ShardID = 1;
+    repeated bytes Points = 2;
+    string Database = 3;
+    string RetentionPolicy = 4;
+}
+
+message WriteShardResponse {
+    int32 Code = 1;
+    string Message = 2;
+}
+
+message ExecuteStatementRequest {
+    string Statement = 1;
+    string Database = 2;
+}
+
+message ExecuteStatementResponse {
+    int32 Code = 1;
+    string Message = 2;
+}
+
+message CreateIteratorRequest {
+    repeated uint64 ShardIDs = 1;
+    bytes Opt = 2;
+}
+
+message CreateIteratorResponse {
+    string Err = 1;
+    int32 DataType = 2;
+}
+
+message FieldDimensionsRequest {
+    repeated uint64 ShardIDs = 1;
+    bytes Sources = 2;
+    int64 Start = 3;
+    int64 End = 4;
+}
+
+message FieldDimensionsResponse {
+    map<string, int32> Fields = 1;
+    repeated string Dimensions = 2;
+    string Err = 3;
+}
+
+message SeriesKeysRequest {
+    repeated uint64 ShardIDs = 1;
+    bytes Opt = 2;
+}
+
+message SeriesKeysResponse {
+    bytes SeriesList = 1;
+    string Err = 2;
+}
+

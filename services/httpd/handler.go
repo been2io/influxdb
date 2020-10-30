@@ -8,6 +8,7 @@ import (
 	"errors"
 	"expvar"
 	"fmt"
+	"github.com/influxdata/influxdb/cluster"
 	"io"
 	"io/ioutil"
 	"log"
@@ -90,7 +91,7 @@ type Handler struct {
 	mux       *pat.PatternServeMux
 	Version   string
 	BuildType string
-
+	ClusterService *cluster.Service
 	MetaClient interface {
 		Database(name string) *meta.DatabaseInfo
 		Databases() []meta.DatabaseInfo
@@ -171,6 +172,14 @@ func NewHandler(c Config) *Handler {
 	}
 
 	h.AddRoutes([]Route{
+		Route{
+			"iterator-create",
+			"POST", "/iterator/create", false, true, h.serveCreateIterator,
+		},
+		Route{
+			"iterator-columns",
+			"POST", "/iterator/columns", false, true, h.serveFieldDimensions,
+		},
 		Route{
 			"query-options", // Satisfy CORS checks.
 			"OPTIONS", "/query", false, true, h.serveOptions,

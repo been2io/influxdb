@@ -16,6 +16,7 @@ require (
 	github.com/glycerine/go-unsnap-stream v0.0.0-20180323001048-9f0cb55181dd // indirect
 	github.com/glycerine/goconvey v0.0.0-20190410193231-58a59202ab31 // indirect
 	github.com/gogo/protobuf v1.3.1
+	github.com/golang/protobuf v1.3.2
 	github.com/golang/snappy v0.0.0-20180518054509-2e65f85255db
 	github.com/google/go-cmp v0.4.0
 	github.com/influxdata/flux v0.65.1
@@ -51,4 +52,5 @@ require (
 	golang.org/x/time v0.0.0-20190308202827-9d24e82272b4
 	gonum.org/v1/gonum v0.6.0 // indirect
 	google.golang.org/grpc v1.26.0
+	gopkg.in/fatih/pool.v2 v2.0.0
 )
