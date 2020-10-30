@@ -4,6 +4,9 @@ package httpd // import "github.com/influxdata/influxdb/services/httpd"
 import (
 	"crypto/tls"
 	"fmt"
+
+
+	"log"
 	"net"
 	"net/http"
 	"os"
@@ -185,7 +188,36 @@ func (s *Service) Open() error {
 
 	// Begin listening for requests in a separate goroutine.
 	go s.serveTCP()
+	go s.register()
 	return nil
+}
+func (s *Service) register() {
+	args := strings.Split(s.ln.Addr().String(), ":")
+	if len(args) == 0 {
+		log.Printf("reigster error bad influxdb addr %v", s.ln.Addr())
+		return
+	}
+	port := args[len(args)-1]
+	if addr, ok := os.LookupEnv("PROXY_ADDR"); ok {
+		for i := 0; i < 100; i++ {
+			url := fmt.Sprintf("http://%v/register?port=%v", addr, port)
+			if response, err := http.Post(url, "", nil); err == nil {
+				if response.StatusCode == 200 {
+					log.Printf("register to %v success", url)
+					return
+				} else {
+					log.Printf("register to %v bad request : %v", url, response.StatusCode)
+
+				}
+			} else {
+				log.Printf("register to %v err:%v", url, err)
+			}
+			time.Sleep(6 * time.Second)
+		}
+
+	} else {
+		log.Println("no register info")
+	}
 }
 
 // Close closes the underlying listener.
