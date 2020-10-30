@@ -3,6 +3,7 @@ package run
 import (
 	"crypto/tls"
 	"fmt"
+	"github.com/influxdata/influxdb/cluster"
 	"io"
 	"log"
 	"net"
@@ -73,12 +74,12 @@ type Server struct {
 
 	MetaClient *meta.Client
 
-	TSDBStore     *tsdb.Store
-	QueryExecutor *query.Executor
-	PointsWriter  *coordinator.PointsWriter
-	Subscriber    *subscriber.Service
-
-	Services []Service
+	TSDBStore      *tsdb.Store
+	QueryExecutor  *query.Executor
+	PointsWriter   *coordinator.PointsWriter
+	Subscriber     *subscriber.Service
+	ClusterService *cluster.Service
+	Services       []Service
 
 	// These references are required for the tcp muxer.
 	SnapshotterService *snapshotter.Service
@@ -207,14 +208,15 @@ func NewServer(c *Config, buildInfo *BuildInfo) (*Server, error) {
 
 	// Initialize query executor.
 	s.QueryExecutor = query.NewExecutor()
+	shardMapper := &coordinator.LocalShardMapper{
+		MetaClient: s.MetaClient,
+		TSDBStore:  coordinator.LocalTSDBStore{Store: s.TSDBStore},
+	}
 	s.QueryExecutor.StatementExecutor = &coordinator.StatementExecutor{
-		MetaClient:  s.MetaClient,
-		TaskManager: s.QueryExecutor.TaskManager,
-		TSDBStore:   s.TSDBStore,
-		ShardMapper: &coordinator.LocalShardMapper{
-			MetaClient: s.MetaClient,
-			TSDBStore:  coordinator.LocalTSDBStore{Store: s.TSDBStore},
-		},
+		MetaClient:        s.MetaClient,
+		TaskManager:       s.QueryExecutor.TaskManager,
+		TSDBStore:         s.TSDBStore,
+		ShardMapper:       shardMapper,
 		Monitor:           s.Monitor,
 		PointsWriter:      s.PointsWriter,
 		MaxSelectPointN:   c.Coordinator.MaxSelectPointN,
@@ -224,7 +226,11 @@ func NewServer(c *Config, buildInfo *BuildInfo) (*Server, error) {
 	s.QueryExecutor.TaskManager.QueryTimeout = time.Duration(c.Coordinator.QueryTimeout)
 	s.QueryExecutor.TaskManager.LogQueriesAfter = time.Duration(c.Coordinator.LogQueriesAfter)
 	s.QueryExecutor.TaskManager.MaxConcurrentQueries = c.Coordinator.MaxConcurrentQueries
-
+	//cluster service
+	s.ClusterService = cluster.NewService(cluster.Config{})
+	s.ClusterService.ShardMapper = shardMapper
+	s.ClusterService.TSDBStore = s.TSDBStore
+	s.ClusterService.MetaClient = s.MetaClient
 	// Initialize the monitor
 	s.Monitor.Version = s.buildInfo.Version
 	s.Monitor.Commit = s.buildInfo.Commit
@@ -289,6 +295,7 @@ func (s *Server) appendHTTPDService(c httpd.Config) {
 	srv.Handler.QueryExecutor = s.QueryExecutor
 	srv.Handler.Monitor = s.Monitor
 	srv.Handler.PointsWriter = s.PointsWriter
+	srv.Handler.ClusterService = s.ClusterService
 	srv.Handler.Version = s.buildInfo.Version
 	srv.Handler.BuildType = "OSS"
 	ss := storage.NewStore(s.TSDBStore, s.MetaClient)
