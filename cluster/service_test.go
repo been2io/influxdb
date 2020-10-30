@@ -113,7 +113,6 @@ func NewService() *Service {
 	s := &Service{
 		Service: cluster.NewService(cluster.Config{}),
 	}
-	s.Service.TSDBStore = &s.TSDBStore
 	return s
 }
 

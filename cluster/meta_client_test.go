@@ -3,7 +3,7 @@ package cluster_test
 import (
 	"time"
 
-	"github.com/influxdata/influxdb/influxql"
+	"github.com/influxdata/influxql"
 	"github.com/influxdata/influxdb/services/meta"
 )
 
