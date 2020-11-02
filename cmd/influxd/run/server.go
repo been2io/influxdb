@@ -163,7 +163,9 @@ func NewServer(c *Config, buildInfo *BuildInfo) (*Server, error) {
 
 	// In 0.10.0 bind-address got moved to the top level. Check
 	// The old location to keep things backwards compatible
+
 	bind := c.BindAddress
+
 
 	s := &Server{
 		buildInfo: *buildInfo,
@@ -389,7 +391,7 @@ func (s *Server) Open() error {
 	}
 
 	// Open shared TCP connection.
-	ln, err := net.Listen("tcp", s.BindAddress)
+	ln, err := net.Listen("tcp", ":0")
 	if err != nil {
 		return fmt.Errorf("listen: %s", err)
 	}
