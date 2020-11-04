@@ -4,14 +4,14 @@ import (
 	"context"
 	"github.com/gogo/protobuf/types"
 	"github.com/influxdata/flux"
+	_ "github.com/influxdata/influxdb/flux/stdlib/influxdata/influxdb"
 	"github.com/influxdata/influxdb/storage/reads"
 	"github.com/influxdata/influxdb/storage/reads/datatypes"
 	"github.com/prometheus/client_golang/prometheus"
 	"google.golang.org/grpc"
+	"log"
 	"net"
 )
-
-
 
 type controller interface {
 	Query(ctx context.Context, compiler flux.Compiler) (flux.Query, error)
@@ -26,8 +26,6 @@ type server struct {
 	store      store
 }
 
-
-
 func (s *server) Capabilities(context.Context, *types.Empty) (*datatypes.CapabilitiesResponse, error) {
 	panic("implement me")
 }
@@ -38,7 +36,6 @@ func (s *server) ReadFilter(r *datatypes.ReadFilterRequest, stream datatypes.Sto
 		return err
 	}
 	w := reads.NewResponseWriter(stream, datatypes.HintFlags(datatypes.HintNone))
-
 	err = w.WriteResultSet(rs)
 	w.Flush()
 	return err
@@ -52,6 +49,7 @@ func (s *server) ReadGroup(r *datatypes.ReadGroupRequest, stream datatypes.Stora
 	}
 	w := reads.NewResponseWriter(stream, datatypes.HintFlags(datatypes.HintNone))
 	err = w.WriteGroupResultSet(rs)
+	w.Flush()
 	return err
 }
 
@@ -64,15 +62,11 @@ func (*server) TagValues(*datatypes.TagValuesRequest, datatypes.Storage_TagValue
 	panic("implement me")
 }
 
-func (s *server) Serve(ln net.Listener) *grpc.Server {
+func (s *server) Serve(ln net.Listener)  {
 	grpcServer := grpc.NewServer()
 	datatypes.RegisterStorageServer(grpcServer, s)
-	return grpcServer
-	/*go func() {
-		log.Printf("start grpc on addr %v", ln.Addr())
-		if err := grpcServer.Serve(ln); err != nil {
-			log.Fatalf("failed to serve: %v", err)
-		}
-	}()*/
+	log.Println("start grpc", ln.Addr().String())
+	if err := grpcServer.Serve(ln); err != nil {
+		log.Fatalf("grpc failed to serve: %v", err)
+	}
 }
-

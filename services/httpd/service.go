@@ -4,7 +4,7 @@ package httpd // import "github.com/influxdata/influxdb/services/httpd"
 import (
 	"crypto/tls"
 	"fmt"
-
+	"github.com/influxdata/influxdb/services/grpc"
 
 	"log"
 	"net"
@@ -17,6 +17,7 @@ import (
 	"time"
 
 	"github.com/influxdata/influxdb/models"
+	"github.com/soheilhy/cmux"
 	"go.uber.org/zap"
 )
 
@@ -105,7 +106,10 @@ func (s *Service) Open() error {
 	s.Logger.Info("Starting HTTP service", zap.Bool("authentication", s.Handler.Config.AuthEnabled))
 
 	s.Handler.Open()
-
+	grpcSrv := grpc.Service{
+		Store: s.Handler.Store,
+	}
+    var mux cmux.CMux
 	// Open listener.
 	if s.https {
 		cert, err := tls.LoadX509KeyPair(s.cert, s.key)
@@ -127,8 +131,11 @@ func (s *Service) Open() error {
 		if err != nil {
 			return err
 		}
-
-		s.ln = listener
+		mux = cmux.New(listener)
+		grpcL := mux.Match(cmux.HTTP2HeaderField("content-type", "application/grpc"))
+		httpL := mux.Match(cmux.HTTP1(),cmux.HTTP2())
+		grpcSrv.Listener = grpcL
+		s.ln = httpL
 	}
 	s.Logger.Info("Listening on HTTP",
 		zap.Stringer("addr", s.ln.Addr()),
@@ -185,8 +192,9 @@ func (s *Service) Open() error {
 		}
 		time.Sleep(10 * time.Millisecond)
 	}
-
 	// Begin listening for requests in a separate goroutine.
+	go grpcSrv.Open()
+	go mux.Serve()
 	go s.serveTCP()
 	go s.register()
 	return nil
