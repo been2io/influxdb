@@ -133,7 +133,7 @@ func (s *Service) Open() error {
 		}
 		mux = cmux.New(listener)
 		grpcL := mux.Match(cmux.HTTP2HeaderField("content-type", "application/grpc"))
-		httpL := mux.Match(cmux.HTTP1(),cmux.HTTP2())
+		httpL := mux.Match(cmux.HTTP1())
 		grpcSrv.Listener = grpcL
 		s.ln = httpL
 	}
@@ -194,9 +194,9 @@ func (s *Service) Open() error {
 	}
 	// Begin listening for requests in a separate goroutine.
 	go grpcSrv.Open()
-	go mux.Serve()
 	go s.serveTCP()
 	go s.register()
+	go mux.Serve()
 	return nil
 }
 func (s *Service) register() {
