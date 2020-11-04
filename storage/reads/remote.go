@@ -72,7 +72,12 @@ func (r *MergedRemoteStore) ReadFilter(ctx context.Context, req *datatypes.ReadF
 	}
 	return NewMergedResultSet(rrs), nil
 }
-
+var (
+	// nil sorts lowest
+	nilSortLo = []byte{0x00}
+	// nil sorts highest
+	nilSortHi = []byte{0xff} // sort nil values
+)
 func (r *MergedRemoteStore) ReadGroup(ctx context.Context, req *datatypes.ReadGroupRequest) (GroupResultSet, error) {
 	var rrs []GroupResultSet
 	for _, c := range r.clients {
