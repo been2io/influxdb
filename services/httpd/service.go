@@ -131,11 +131,7 @@ func (s *Service) Open() error {
 		if err != nil {
 			return err
 		}
-		mux = cmux.New(listener)
-		grpcL := mux.Match(cmux.HTTP2HeaderField("content-type", "application/grpc"))
-		httpL := mux.Match(cmux.HTTP1())
-		grpcSrv.Listener = grpcL
-		s.ln = httpL
+		s.ln = listener
 	}
 	s.Logger.Info("Listening on HTTP",
 		zap.Stringer("addr", s.ln.Addr()),
@@ -192,11 +188,18 @@ func (s *Service) Open() error {
 		}
 		time.Sleep(10 * time.Millisecond)
 	}
+	mux = cmux.New(s.ln)
+	grpcL := mux.Match(cmux.HTTP2())
+	httpL := mux.Match(cmux.Any())
+	grpcSrv.Listener = grpcL
+	s.ln = httpL
 	// Begin listening for requests in a separate goroutine.
 	go grpcSrv.Open()
 	go s.serveTCP()
 	go s.register()
-	go mux.Serve()
+	go func() {
+		mux.Serve()
+	}()
 	return nil
 }
 func (s *Service) register() {

@@ -35,6 +35,9 @@ func (s *server) ReadFilter(r *datatypes.ReadFilterRequest, stream datatypes.Sto
 	if err != nil {
 		return err
 	}
+	if rs == nil {
+		return nil
+	}
 	w := reads.NewResponseWriter(stream, datatypes.HintFlags(datatypes.HintNone))
 	err = w.WriteResultSet(rs)
 	w.Flush()
@@ -46,6 +49,9 @@ func (s *server) ReadGroup(r *datatypes.ReadGroupRequest, stream datatypes.Stora
 	rs, err := s.store.ReadGroup(context.TODO(), r)
 	if err != nil {
 		return err
+	}
+	if rs == nil {
+		return nil
 	}
 	w := reads.NewResponseWriter(stream, datatypes.HintFlags(datatypes.HintNone))
 	err = w.WriteGroupResultSet(rs)
@@ -62,7 +68,7 @@ func (*server) TagValues(*datatypes.TagValuesRequest, datatypes.Storage_TagValue
 	panic("implement me")
 }
 
-func (s *server) Serve(ln net.Listener)  {
+func (s *server) Serve(ln net.Listener) {
 	grpcServer := grpc.NewServer()
 	datatypes.RegisterStorageServer(grpcServer, s)
 	log.Println("start grpc", ln.Addr().String())
