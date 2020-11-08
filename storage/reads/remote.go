@@ -139,6 +139,7 @@ func (r *RemoteReader) ReadFilter(ctx context.Context, spec influxdb.ReadFilterS
 		s:     store,
 		spec:  spec,
 		alloc: alloc,
+		cache: newTagsCache(0),
 	}
 	return &fi, nil
 
@@ -153,6 +154,7 @@ func (r *RemoteReader) ReadGroup(ctx context.Context, spec influxdb.ReadGroupSpe
 		s:     store,
 		spec:  spec,
 		alloc: alloc,
+		cache: newTagsCache(0),
 	}
 	return &gi, nil
 }
