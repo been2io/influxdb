@@ -5,6 +5,8 @@ import (
 	"crypto/tls"
 	"fmt"
 	"github.com/influxdata/influxdb/services/grpc"
+	"golang.org/x/net/http2"
+	"golang.org/x/net/http2/h2c"
 	"io/ioutil"
 
 	"log"
@@ -18,7 +20,6 @@ import (
 	"time"
 
 	"github.com/influxdata/influxdb/models"
-	"github.com/soheilhy/cmux"
 	"go.uber.org/zap"
 )
 
@@ -110,7 +111,6 @@ func (s *Service) Open() error {
 	grpcSrv := grpc.Service{
 		Store: s.Handler.Store,
 	}
-    var mux cmux.CMux
 	// Open listener.
 	if s.https {
 		cert, err := tls.LoadX509KeyPair(s.cert, s.key)
@@ -189,18 +189,11 @@ func (s *Service) Open() error {
 		}
 		time.Sleep(10 * time.Millisecond)
 	}
-	mux = cmux.New(s.ln)
-	grpcL := mux.Match(cmux.HTTP2())
-	httpL := mux.Match(cmux.Any())
-	grpcSrv.Listener = grpcL
-	s.ln = httpL
 	// Begin listening for requests in a separate goroutine.
-	go grpcSrv.Open()
+	s.Handler.GRPCServer = grpcSrv.Server()
 	go s.serveTCP()
 	go s.register()
-	go func() {
-		mux.Serve()
-	}()
+
 	return nil
 }
 func (s *Service) register() {
@@ -229,7 +222,7 @@ func (s *Service) register() {
 						log.Println(err)
 					}
 
-					log.Printf("register to %v bad request :status %v,%v", url, response.StatusCode,string(b))
+					log.Printf("register to %v bad request :status %v,%v", url, response.StatusCode, string(b))
 
 				}
 			} else {
@@ -302,7 +295,10 @@ func (s *Service) serveUnixSocket() {
 func (s *Service) serve(listener net.Listener) {
 	// The listener was closed so exit
 	// See https://github.com/golang/go/issues/4373
-	err := http.Serve(listener, s.Handler)
+	server := http.Server{
+		Handler: h2c.NewHandler(s.Handler, &http2.Server{}),
+	}
+	err := server.Serve(listener)
 	if err != nil && !strings.Contains(err.Error(), "closed") {
 		s.err <- fmt.Errorf("listener failed: addr=%s, err=%s", s.Addr(), err)
 	}

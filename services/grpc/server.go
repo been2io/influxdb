@@ -67,7 +67,11 @@ func (*server) TagKeys(*datatypes.TagKeysRequest, datatypes.Storage_TagKeysServe
 func (*server) TagValues(*datatypes.TagValuesRequest, datatypes.Storage_TagValuesServer) error {
 	panic("implement me")
 }
-
+func (s *server)Server()*grpc.Server  {
+	grpcServer := grpc.NewServer()
+	datatypes.RegisterStorageServer(grpcServer, s)
+	return grpcServer
+}
 func (s *server) Serve(ln net.Listener) {
 	grpcServer := grpc.NewServer()
 	datatypes.RegisterStorageServer(grpcServer, s)
