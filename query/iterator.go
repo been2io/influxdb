@@ -1173,6 +1173,9 @@ func decodeVarRef(pb *internal.VarRef) influxql.VarRef {
 
 type nilFloatIterator struct{}
 
+func (i *nilFloatIterator) Nil() {
+}
+
 func (*nilFloatIterator) Stats() IteratorStats       { return IteratorStats{} }
 func (*nilFloatIterator) Close() error               { return nil }
 func (*nilFloatIterator) Next() (*FloatPoint, error) { return nil, nil }
@@ -1189,6 +1192,9 @@ func (itr *nilFloatReaderIterator) Close() error {
 	}
 	return nil
 }
+func (itr *nilFloatReaderIterator) Nil() {
+}
+
 func (*nilFloatReaderIterator) Next() (*FloatPoint, error) { return nil, nil }
 
 // IteratorStats represents statistics about an iterator.
@@ -1419,4 +1425,8 @@ func (enc *IteratorEncoder) encodeStats(stats IteratorStats) error {
 		return err
 	}
 	return nil
+}
+
+type NilIterator interface {
+	Nil()
 }

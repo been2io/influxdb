@@ -399,6 +399,8 @@ func (s *Service) CreateIterator(conn io.ReadWriteCloser) {
 	resp := &CreateIteratorResponse{}
 	var dataType influxql.DataType
 	switch itr.(type) {
+	case query.NilIterator:
+		dataType = influxql.Unknown
 	case query.FloatIterator:
 		dataType = influxql.Float
 	case query.IntegerIterator:
@@ -408,6 +410,7 @@ func (s *Service) CreateIterator(conn io.ReadWriteCloser) {
 	case query.BooleanIterator:
 		dataType = influxql.Boolean
 	default:
+		dataType = influxql.Unknown
 		resp.Err = fmt.Errorf("no data type %v", dataType)
 	}
 	resp.DataType = dataType

@@ -40,7 +40,7 @@ require (
 	github.com/retailnext/hllpp v1.0.1-0.20180308014038-101a6d2f8b52
 	github.com/segmentio/kafka-go v0.2.0 // indirect
 	github.com/smartystreets/goconvey v1.6.4 // indirect
-	github.com/soheilhy/cmux v0.1.4
+	github.com/soheilhy/cmux v0.1.4 // indirect
 	github.com/spf13/cast v1.3.0
 	github.com/tinylib/msgp v1.0.2
 	github.com/willf/bitset v1.1.3 // indirect
