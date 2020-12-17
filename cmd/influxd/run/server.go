@@ -4,6 +4,8 @@ import (
 	"crypto/tls"
 	"fmt"
 	"github.com/influxdata/influxdb/cluster"
+	"github.com/influxdata/influxdb/services/grpc"
+	"github.com/influxdata/influxdb/services/replication"
 	"io"
 	"log"
 	"net"
@@ -83,8 +85,9 @@ type Server struct {
 
 	// These references are required for the tcp muxer.
 	SnapshotterService *snapshotter.Service
-
-	Monitor *monitor.Monitor
+	ReplicationService *replication.Service
+	GrpcService        *grpc.Service
+	Monitor            *monitor.Monitor
 
 	// Server reporting and registration
 	reportingDisabled bool
@@ -165,7 +168,6 @@ func NewServer(c *Config, buildInfo *BuildInfo) (*Server, error) {
 	// The old location to keep things backwards compatible
 
 	bind := c.BindAddress
-
 
 	s := &Server{
 		buildInfo: *buildInfo,
@@ -305,6 +307,7 @@ func (s *Server) appendHTTPDService(c httpd.Config) {
 	if s.config.HTTPD.FluxEnabled {
 		srv.Handler.Controller = control.NewController(s.MetaClient, reads.NewReader(ss), authorizer, c.AuthEnabled, s.Logger)
 	}
+	srv.Handler.GRPCServer=grpc.NewServer(srv.Handler.Controller, srv.Handler.Store, s.MetaClient, s.TSDBStore).Server()
 
 	s.Services = append(s.Services, srv)
 }

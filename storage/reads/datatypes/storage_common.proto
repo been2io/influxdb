@@ -1,7 +1,6 @@
 syntax = "proto3";
 package influxdata.platform.storage;
 option go_package = "datatypes";
-
 import "gogoproto/gogo.proto";
 import "google/protobuf/empty.proto";
 import "google/protobuf/any.proto";
@@ -28,9 +27,46 @@ service Storage {
     // Capabilities returns a map of keys and values identifying the capabilities supported by the storage engine
     rpc Capabilities (google.protobuf.Empty) returns (CapabilitiesResponse);
 
-    rpc Write (WriteShardRequest) returns (WriteResponse)
-}
+    rpc Write (WriteShardRequest) returns (WriteResponse);
 
+    rpc RequestPartitionShards (ShardRequest) returns (ShardInfoList);
+    rpc ExportShard (ShardExportRequest) returns (stream ShardExportResponse);
+    rpc ImportPartition (PartitionImportRequest) returns (PartitionImportResponse);
+}
+message ShardExportResponse {
+    string Err = 1;
+    bytes Data = 2;
+    bool last = 3;
+}
+message PartitionImportRequest {
+    string Addr = 1;
+    string DB = 2;
+    string Partition = 3;
+    int64 Start = 4;
+    int64 End = 5;
+}
+message PartitionImportResponse {
+    string Err = 1;
+}
+message ShardExportRequest {
+    uint64 ID = 1;
+    int64 Start = 2;
+    int64 End = 3;
+}
+message ShardRequest {
+    string DB = 1;
+    string Partition = 2;
+    int64 Start = 3;
+    int64 End = 4;
+}
+message ShardInfoList {
+    repeated ShardInfo Items = 1;
+}
+message ShardInfo {
+    uint64 ID = 1;
+    int64 Start = 2;
+    int64 End = 3;
+}
 message WriteShardRequest {
     uint64 ShardID = 1;
     repeated bytes Points = 2;

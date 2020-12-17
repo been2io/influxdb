@@ -4,7 +4,6 @@ package httpd // import "github.com/influxdata/influxdb/services/httpd"
 import (
 	"crypto/tls"
 	"fmt"
-	"github.com/influxdata/influxdb/services/grpc"
 	"golang.org/x/net/http2"
 	"golang.org/x/net/http2/h2c"
 	"io/ioutil"
@@ -108,9 +107,7 @@ func (s *Service) Open() error {
 	s.Logger.Info("Starting HTTP service", zap.Bool("authentication", s.Handler.Config.AuthEnabled))
 
 	s.Handler.Open()
-	grpcSrv := grpc.Service{
-		Store: s.Handler.Store,
-	}
+
 	// Open listener.
 	if s.https {
 		cert, err := tls.LoadX509KeyPair(s.cert, s.key)
@@ -190,7 +187,6 @@ func (s *Service) Open() error {
 		time.Sleep(10 * time.Millisecond)
 	}
 	// Begin listening for requests in a separate goroutine.
-	s.Handler.GRPCServer = grpcSrv.Server()
 	go s.serveTCP()
 	go s.register()
 

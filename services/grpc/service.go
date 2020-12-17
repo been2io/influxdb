@@ -1,6 +1,7 @@
 package grpc
 
 import (
+	"github.com/influxdata/influxdb/services/replication"
 	"google.golang.org/grpc"
 	"net"
 )
@@ -8,6 +9,7 @@ import (
 type Service struct {
 	Listener   net.Listener
 	Store      store
+	TSDBStore  replication.TSDBStore
 	Controller controller
 }
 
