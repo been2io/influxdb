@@ -680,7 +680,7 @@ func (i *Index) CreateSeriesListIfNotExists(keys [][]byte, names [][]byte, tagsS
 				}
 
 				// Some cached bitset results may need to be updated.
-				i.tagValueCache.RLock()
+				//i.tagValueCache.RLock()
 				for j, id := range ids {
 					if id == 0 {
 						continue
@@ -688,27 +688,27 @@ func (i *Index) CreateSeriesListIfNotExists(keys [][]byte, names [][]byte, tagsS
 
 					name := pNames[idx][j]
 					tags := pTags[idx][j]
-					if i.tagValueCache.measurementContainsSets(name) {
-						for _, pair := range tags {
-							// TODO(edd): It's not clear to me yet whether it will be better to take a lock
-							// on every series id set, or whether to gather them all up under the cache rlock
-							// and then take the cache lock and update them all at once (without invoking a lock
-							// on each series id set).
-							//
-							// Taking the cache lock will block all queries, but is one lock. Taking each series set
-							// lock might be many lock/unlocks but will only block a query that needs that particular set.
-							//
-							// Need to think on it, but I think taking a lock on each series id set is the way to go.
-							//
-							// One other option here is to take a lock on the series id set when we first encounter it
-							// and then keep it locked until we're done with all the ids.
-							//
-							// Note: this will only add `id` to the set if it exists.
-							i.tagValueCache.addToSet(name, pair.Key, pair.Value, id) // Takes a lock on the series id set
-						}
+					//if i.tagValueCache.measurementContainsSets(name) {
+					for _, pair := range tags {
+						// TODO(edd): It's not clear to me yet whether it will be better to take a lock
+						// on every series id set, or whether to gather them all up under the cache rlock
+						// and then take the cache lock and update them all at once (without invoking a lock
+						// on each series id set).
+						//
+						// Taking the cache lock will block all queries, but is one lock. Taking each series set
+						// lock might be many lock/unlocks but will only block a query that needs that particular set.
+						//
+						// Need to think on it, but I think taking a lock on each series id set is the way to go.
+						//
+						// One other option here is to take a lock on the series id set when we first encounter it
+						// and then keep it locked until we're done with all the ids.
+						//
+						// Note: this will only add `id` to the set if it exists.
+						i.tagValueCache.addToSet(name, pair.Key, pair.Value, id) // Takes a lock on the series id set
 					}
+					//}
 				}
-				i.tagValueCache.RUnlock()
+				//i.tagValueCache.RUnlock()
 
 				errC <- err
 			}
@@ -754,24 +754,24 @@ func (i *Index) CreateSeriesIfNotExists(key, name []byte, tags models.Tags) erro
 
 	// If there are cached sets for any of the tag pairs, they will need to be
 	// updated with the series id.
-	i.tagValueCache.RLock()
-	if i.tagValueCache.measurementContainsSets(name) {
-		for _, pair := range tags {
-			// TODO(edd): It's not clear to me yet whether it will be better to take a lock
-			// on every series id set, or whether to gather them all up under the cache rlock
-			// and then take the cache lock and update them all at once (without invoking a lock
-			// on each series id set).
-			//
-			// Taking the cache lock will block all queries, but is one lock. Taking each series set
-			// lock might be many lock/unlocks but will only block a query that needs that particular set.
-			//
-			// Need to think on it, but I think taking a lock on each series id set is the way to go.
-			//
-			// Note this will only add `id` to the set if it exists.
-			i.tagValueCache.addToSet(name, pair.Key, pair.Value, ids[0]) // Takes a lock on the series id set
-		}
+	//i.tagValueCache.RLock()
+	//if i.tagValueCache.measurementContainsSets(name) {
+	for _, pair := range tags {
+		// TODO(edd): It's not clear to me yet whether it will be better to take a lock
+		// on every series id set, or whether to gather them all up under the cache rlock
+		// and then take the cache lock and update them all at once (without invoking a lock
+		// on each series id set).
+		//
+		// Taking the cache lock will block all queries, but is one lock. Taking each series set
+		// lock might be many lock/unlocks but will only block a query that needs that particular set.
+		//
+		// Need to think on it, but I think taking a lock on each series id set is the way to go.
+		//
+		// Note this will only add `id` to the set if it exists.
+		i.tagValueCache.addToSet(name, pair.Key, pair.Value, ids[0]) // Takes a lock on the series id set
 	}
-	i.tagValueCache.RUnlock()
+	//}
+	//i.tagValueCache.RUnlock()
 	return nil
 }
 
@@ -802,13 +802,13 @@ func (i *Index) DropSeries(seriesID uint64, key []byte, cascade bool) error {
 
 	// If there are cached sets for any of the tag pairs, they will need to be
 	// updated with the series id.
-	i.tagValueCache.RLock()
+	//i.tagValueCache.RLock()
 	if i.tagValueCache.measurementContainsSets(name) {
 		for _, pair := range tags {
-			i.tagValueCache.delete(name, pair.Key, pair.Value, seriesID) // Takes a lock on the series id set
+			i.tagValueCache.Delete(name, pair.Key, pair.Value, seriesID) // Takes a lock on the series id set
 		}
 	}
-	i.tagValueCache.RUnlock()
+	//i.tagValueCache.RUnlock()
 
 	// Check if that was the last series for the measurement in the entire index.
 	if ok, err := i.MeasurementHasSeries(name); err != nil {

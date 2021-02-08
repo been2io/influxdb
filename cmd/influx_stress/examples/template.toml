@@ -6,7 +6,7 @@
     # If enabled the provisioner will actually run
     enabled = true
     # Address of the instance that is to be provisioned
-    address = "localhost:8086"
+    address = "localhost:7001"
     # Database that will be created/deleted
     database = "stress"
     # Attempt to delete database
@@ -52,7 +52,7 @@
       # If enabled the writer will actually write
       enabled = true
       # Addresses is an array of the Influxdb instances
-      addresses = ["localhost:8086"] # stress_test_server runs on port 1234
+      addresses = ["localhost:7001"] # stress_test_server runs on port 1234
       # Database that is being written to
       database = "stress"
       # Precision of points that are being written
@@ -82,7 +82,7 @@
       # if enabled the reader will actually read
       enabled = true
       # Address of the instance that will be queried
-      addresses = ["localhost:8086"]
+      addresses = ["localhost:7001"]
       # Database that will be queried
       database = "stress"
       # Interval bewteen queries
